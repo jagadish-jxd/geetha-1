@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff8f3" />
+  <title>Our Little Memories ❤️ — A Special Birthday Album</title>
+
+  <!-- Immediate Browser Refresh Guard (Redirects to first page on refresh) -->
+  <script>
+    (function () {
+      try {
+        const navEntries = performance.getEntriesByType('navigation');
+        const isReload = (navEntries && navEntries.length > 0 && navEntries[0].type === 'reload') ||
+          (window.performance && window.performance.navigation && window.performance.navigation.type === 1);
+
+        // If user refreshes or reloads the page, return to the first page (index.html)
+        if (isReload) {
+          window.location.replace('index.html');
+        }
+      } catch (e) {
+        // Safe fallback
+      }
+    })();
+  </script>
+
+  <link rel="icon" type="image/png" href="/favicon.png" />
+
+  <!-- Google Fonts: Cormorant Garamond, Great Vibes, Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&family=Outfit:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="./memory.css" />
+</head>
+
+<body>
+  <!-- Ambient Dreamy Romantic Background -->
+  <div class="memory-bg" aria-hidden="true">
+    <div class="memory-bg__radial"></div>
+    <div class="memory-bg__glow"></div>
+    <div class="memory-bg__motes" id="memoryMotes"></div>
+    <canvas class="memory-bg__canvas" id="ambientCanvas"></canvas>
+  </div>
+
+  <!-- Burst Particle FX Canvas for Balloon Pops -->
+  <canvas class="burst-canvas" id="burstCanvas" aria-hidden="true"></canvas>
+
+  <!-- Main Album Container -->
+  <main class="memory-album" id="memoryAlbum">
+    <!-- Top Bar Navigation & Counter -->
+    <header class="memory-header">
+      <div class="memory-header__nav">
+        <a href="index.html" class="memory-back-btn" id="memoryBackBtn" aria-label="Back to Birthday Tree">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor"
+            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Back to Birthday</span>
+        </a>
+
+        <div class="memory-counter" id="memoryCounter" aria-live="polite">
+          <span class="memory-counter__dot"></span>
+          <span class="memory-counter__text" id="counterText">0 of 8 Memories Discovered</span>
+          <span class="memory-counter__sparkle">✨</span>
+        </div>
+      </div>
+
+      <!-- Hero Titles -->
+      <div class="memory-hero">
+        <div class="memory-hero__badge" aria-hidden="true">
+          <span class="memory-hero__badge-heart">❦</span>
+          <span>Chapter of Memories</span>
+        </div>
+
+        <h1 class="memory-hero__title">
+          <span>Our Little Memories</span>
+          <span class="memory-hero__title-heart">❤️</span>
+        </h1>
+
+        <div class="memory-hero__rule" aria-hidden="true"></div>
+
+        <p class="memory-hero__subtitle">
+          Every moment with you is a gift to cherish.
+        </p>
+        <p class="memory-hero__instruction">
+          <span class="instruction-sparkle">✨</span>
+          <span>Pop the balloons and discover our memories</span>
+          <span class="instruction-sparkle">✨</span>
+        </p>
+      </div>
+    </header>
+
+    <!-- Scrapbook Layout Canvas / Memories Area -->
+    <section class="scrapbook-canvas" id="scrapbookCanvas" aria-label="Interactive Memories Scrapbook">
+
+      <!-- MEMORY 01: Wide Landscape (1599x899) -->
+      <article class="memory-item memory-item--1" id="memoryItem1" data-id="1" data-revealed="false">
+        <!-- Floating Balloon -->
+        <button class="balloon-btn balloon--rose" id="balloon1" type="button"
+          aria-label="Pop Balloon 1 to reveal Cherished Moment">
+          <div class="balloon__shimmer"></div>
+          <svg class="balloon__svg" viewBox="0 0 140 180" aria-hidden="true">
+            <defs>
+              <radialGradient id="balloonGrad1" cx="36%" cy="28%" r="78%">
+                <stop offset="0%" stop-color="#fff0f5" />
+                <stop offset="28%" stop-color="#ff7f9f" />
+                <stop offset="72%" stop-color="#e82b5f" />
+                <stop offset="100%" stop-color="#aa103c" />
+              </radialGradient>
+              <linearGradient id="stringGrad1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#df9d43" />
+                <stop offset="100%" stop-color="#ffbe6a" />
+              </linearGradient>
+            </defs>
+            <!-- Specular 3D Body -->
+            <path class="balloon__body"
+              d="M70 10 C32 10, 14 36, 14 74 C14 112, 52 144, 66 150 L63 158 L77 158 L74 150 C88 144, 126 112, 126 74 C126 36, 108 10, 70 10 Z"
+              fill="url(#balloonGrad1)" />
+            <!-- Inner gloss reflection -->
+            <path class="balloon__gloss"
+              d="M42 28 C56 18, 80 18, 92 25 C98 29, 92 34, 84 31 C72 26, 52 28, 40 36 C35 39, 36 32, 42 28 Z"
+              fill="#ffffff" opacity="0.65" />
+            <ellipse class="balloon__highlight" cx="44" cy="48" rx="8" ry="15" transform="rotate(-24 44 48)"
+              fill="#ffffff" opacity="0.45" />
+            <!-- Tied knot -->
+            <polygon class="balloon__knot" points="64,154 76,154 78,162 62,162" fill="#8c0c30" />
+            <!-- Swaying curled ribbon string -->
+            <path class="balloon__string" d="M70 162 C68 185, 78 205, 66 230 C56 250, 76 270, 70 300" fill="none"
+              stroke="url(#stringGrad1)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <div class="balloon__tag">
+            <span class="balloon__tag-star">★</span>
+            <span class="balloon__tag-text">Pop Me</span>
+          </div>
+        </button>
+
+        <!-- Revealed Memory Card -->
+        <div class="memory-card" id="card1" aria-hidden="true">
+          <div class="memory-card__pin"></div>
+          <div class="memory-card__washi"></div>
+          <div class="memory-card__frame">
+            <div class="memory-card__img-box landscape-box" title="Click to view fullscreen">
+              <img src="/media/memories/Memory1.jpg" alt="Cherished Moment with Sister" class="memory-card__img"
+                id="img1" loading="lazy" />
+              <div class="memory-card__zoom-hint">🔍 View Fullscreen</div>
+            </div>
+            <div class="memory-card__info">
+              <span class="memory-card__badge">Memory 01 • Cherished Smiles</span>
+              <h3 class="memory-card__title">A Moment of Pure Joy</h3>
+              <p class="memory-card__caption">
+                "A moment of pure joy, endless smiles, and warmth that lights up every room we enter together." ❤️
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- MEMORY 02: Tall Portrait (899x1434) -->
+      <article class="memory-item memory-item--2" id="memoryItem2" data-id="2" data-revealed="false">
+        <button class="balloon-btn balloon--peach" id="balloon2" type="button"
+          aria-label="Pop Balloon 2 to reveal Sweet Times">
+          <div class="balloon__shimmer"></div>
+          <svg class="balloon__svg" viewBox="0 0 140 180" aria-hidden="true">
+            <defs>
+              <radialGradient id="balloonGrad2" cx="36%" cy="28%" r="78%">
+                <stop offset="0%" stop-color="#fff5ed" />
+                <stop offset="28%" stop-color="#ffaa80" />
+                <stop offset="72%" stop-color="#f26938" />
+                <stop offset="100%" stop-color="#b83812" />
+              </radialGradient>
+              <linearGradient id="stringGrad2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#df9d43" />
+                <stop offset="100%" stop-color="#ffbe6a" />
+              </linearGradient>
+            </defs>
+            <path class="balloon__body"
+              d="M70 10 C32 10, 14 36, 14 74 C14 112, 52 144, 66 150 L63 158 L77 158 L74 150 C88 144, 126 112, 126 74 C126 36, 108 10, 70 10 Z"
+              fill="url(#balloonGrad2)" />
+            <path class="balloon__gloss"
+              d="M42 28 C56 18, 80 18, 92 25 C98 29, 92 34, 84 31 C72 26, 52 28, 40 36 C35 39, 36 32, 42 28 Z"
+              fill="#ffffff" opacity="0.65" />
+            <ellipse class="balloon__highlight" cx="44" cy="48" rx="8" ry="15" transform="rotate(-24 44 48)"
+              fill="#ffffff" opacity="0.45" />
+            <polygon class="balloon__knot" points="64,154 76,154 78,162 62,162" fill="#9e2808" />
+            <path class="balloon__string" d="M70 162 C72 185, 62 205, 74 230 C84 250, 64 270, 70 300" fill="none"
+              stroke="url(#stringGrad2)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <div class="balloon__tag">
+            <span class="balloon__tag-star">★</span>
+            <span class="balloon__tag-text">Pop Me</span>
+          </div>
+        </button>
+
+        <div class="memory-card" id="card2" aria-hidden="true">
+          <div class="memory-card__pin"></div>
+          <div class="memory-card__washi"></div>
+          <div class="memory-card__frame">
+            <div class="memory-card__img-box portrait-box" title="Click to view fullscreen">
+              <img src="/media/memories/Memory2.jpg" alt="Travel and Adventures with Sister" class="memory-card__img"
+                id="img2" loading="lazy" />
+              <div class="memory-card__zoom-hint">🔍 View Fullscreen</div>
+            </div>
+            <div class="memory-card__info">
+              <span class="memory-card__badge">Memory 02 • Wanderlust &amp; Adventures ✈️</span>
+              <h3 class="memory-card__title">Adventures &amp; Exploring Horizons</h3>
+              <p class="memory-card__caption">
+                "A random picture, an unforgettable moment, and a bond that means so much. ♾️❤️"
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- MEMORY 03: Balanced / Near Square (864x985) -->
+      <article class="memory-item memory-item--3" id="memoryItem3" data-id="3" data-revealed="false">
+        <button class="balloon-btn balloon--gold" id="balloon3" type="button"
+          aria-label="Pop Balloon 3 to reveal Special Bond">
+          <div class="balloon__shimmer"></div>
+          <svg class="balloon__svg" viewBox="0 0 140 180" aria-hidden="true">
+            <defs>
+              <radialGradient id="balloonGrad3" cx="36%" cy="28%" r="78%">
+                <stop offset="0%" stop-color="#fffbf0" />
+                <stop offset="28%" stop-color="#ffd56a" />
+                <stop offset="72%" stop-color="#f5a11d" />
+                <stop offset="100%" stop-color="#b56707" />
+              </radialGradient>
+              <linearGradient id="stringGrad3" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#df9d43" />
+                <stop offset="100%" stop-color="#ffbe6a" />
+              </linearGradient>
+            </defs>
+            <path class="balloon__body"
+              d="M70 10 C32 10, 14 36, 14 74 C14 112, 52 144, 66 150 L63 158 L77 158 L74 150 C88 144, 126 112, 126 74 C126 36, 108 10, 70 10 Z"
+              fill="url(#balloonGrad3)" />
+            <path class="balloon__gloss"
+              d="M42 28 C56 18, 80 18, 92 25 C98 29, 92 34, 84 31 C72 26, 52 28, 40 36 C35 39, 36 32, 42 28 Z"
+              fill="#ffffff" opacity="0.65" />
+            <ellipse class="balloon__highlight" cx="44" cy="48" rx="8" ry="15" transform="rotate(-24 44 48)"
+              fill="#ffffff" opacity="0.45" />
+            <polygon class="balloon__knot" points="64,154 76,154 78,162 62,162" fill="#9c5402" />
+            <path class="balloon__string" d="M70 162 C66 185, 76 205, 68 230 C58 250, 76 270, 70 300" fill="none"
+              stroke="url(#stringGrad3)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <div class="balloon__tag">
+            <span class="balloon__tag-star">★</span>
+            <span class="balloon__tag-text">Pop Me</span>
+          </div>
+        </button>
+
+        <div class="memory-card" id="card3" aria-hidden="true">
+          <div class="memory-card__pin"></div>
+          <div class="memory-card__washi"></div>
+          <div class="memory-card__frame">
+            <div class="memory-card__img-box square-box" title="Click to view fullscreen">
+              <img src="/media/memories/Memory3.jpg" alt="Special Bond with Sister" class="memory-card__img" id="img3"
+                loading="lazy" />
+              <div class="memory-card__zoom-hint">🔍 View Fullscreen</div>
+            </div>
+            <div class="memory-card__info">
+              <span class="memory-card__badge">Memory 03 • Special Bond</span>
+              <h3 class="memory-card__title">Always by Your Side</h3>
+              <p class="memory-card__caption">
+                "Always cheering for you, my precious sister. No matter where life takes us, I always have your back."
+                🌟
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- MEMORY 04: Classic Landscape 4:3 (1536x1152) -->
+      <article class="memory-item memory-item--4" id="memoryItem4" data-id="4" data-revealed="false">
+        <button class="balloon-btn balloon--lavender" id="balloon4" type="button"
+          aria-label="Pop Balloon 4 to reveal Forever Precious">
+          <div class="balloon__shimmer"></div>
+          <svg class="balloon__svg" viewBox="0 0 140 180" aria-hidden="true">
+            <defs>
+              <radialGradient id="balloonGrad4" cx="36%" cy="28%" r="78%">
+                <stop offset="0%" stop-color="#faf2ff" />
+                <stop offset="28%" stop-color="#e28ee8" />
+                <stop offset="72%" stop-color="#c14ecb" />
+                <stop offset="100%" stop-color="#7c1f85" />
+              </radialGradient>
+              <linearGradient id="stringGrad4" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#df9d43" />
+                <stop offset="100%" stop-color="#ffbe6a" />
+              </linearGradient>
+            </defs>
+            <path class="balloon__body"
+              d="M70 10 C32 10, 14 36, 14 74 C14 112, 52 144, 66 150 L63 158 L77 158 L74 150 C88 144, 126 112, 126 74 C126 36, 108 10, 70 10 Z"
+              fill="url(#balloonGrad4)" />
+            <path class="balloon__gloss"
+              d="M42 28 C56 18, 80 18, 92 25 C98 29, 92 34, 84 31 C72 26, 52 28, 40 36 C35 39, 36 32, 42 28 Z"
+              fill="#ffffff" opacity="0.65" />
+            <ellipse class="balloon__highlight" cx="44" cy="48" rx="8" ry="15" transform="rotate(-24 44 48)"
+              fill="#ffffff" opacity="0.45" />
+            <polygon class="balloon__knot" points="64,154 76,154 78,162 62,162" fill="#6a1572" />
+            <path class="balloon__string" d="M70 162 C74 185, 64 205, 72 230 C82 250, 66 270, 70 300" fill="none"
+              stroke="url(#stringGrad4)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <div class="balloon__tag">
+            <span class="balloon__tag-star">★</span>
+            <span class="balloon__tag-text">Pop Me</span>
+          </div>
+        </button>
+
+        <div class="memory-card" id="card4" aria-hidden="true">
+          <div class="memory-card__pin"></div>
+          <div class="memory-card__washi"></div>
+          <div class="memory-card__frame">
+            <div class="memory-card__img-box landscape-box-43" title="Click to view fullscreen">
+              <img src="/media/memories/Memory4.jpg" alt="Forever Precious Memory" class="memory-card__img" id="img4"
+                loading="lazy" />
+              <div class="memory-card__zoom-hint">🔍 View Fullscreen</div>
+            </div>
+            <div class="memory-card__info">
+              <span class="memory-card__badge">Memory 04 • Forever Precious</span>
+              <h3 class="memory-card__title">Moments That Shine</h3>
+              <p class="memory-card__caption">
+                "Moments with you are always the closest to my heart — time pauses whenever we are together." 💖
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- MEMORY 05: Portrait 3:4 (1025x1401) -->
+      <article class="memory-item memory-item--5" id="memoryItem5" data-id="5" data-revealed="false">
+        <button class="balloon-btn balloon--ruby" id="balloon5" type="button"
+          aria-label="Pop Balloon 5 to reveal Infinite Love">
+          <div class="balloon__shimmer"></div>
+          <svg class="balloon__svg" viewBox="0 0 140 180" aria-hidden="true">
+            <defs>
+              <radialGradient id="balloonGrad5" cx="36%" cy="28%" r="78%">
+                <stop offset="0%" stop-color="#fff0f3" />
+                <stop offset="28%" stop-color="#ff608c" />
+                <stop offset="72%" stop-color="#d61852" />
+                <stop offset="100%" stop-color="#80062a" />
+              </radialGradient>
+              <linearGradient id="stringGrad5" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#df9d43" />
+                <stop offset="100%" stop-color="#ffbe6a" />
+              </linearGradient>
+            </defs>
+            <path class="balloon__body"
+              d="M70 10 C32 10, 14 36, 14 74 C14 112, 52 144, 66 150 L63 158 L77 158 L74 150 C88 144, 126 112, 126 74 C126 36, 108 10, 70 10 Z"
+              fill="url(#balloonGrad5)" />
+            <path class="balloon__gloss"
+              d="M42 28 C56 18, 80 18, 92 25 C98 29, 92 34, 84 31 C72 26, 52 28, 40 36 C35 39, 36 32, 42 28 Z"
+              fill="#ffffff" opacity="0.65" />
+            <ellipse class="balloon__highlight" cx="44" cy="48" rx="8" ry="15" transform="rotate(-24 44 48)"
+              fill="#ffffff" opacity="0.45" />
+            <polygon class="balloon__knot" points="64,154 76,154 78,162 62,162" fill="#6e0422" />
+            <path class="balloon__string" d="M70 162 C68 185, 78 205, 66 230 C58 250, 74 270, 70 300" fill="none"
+              stroke="url(#stringGrad5)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <div class="balloon__tag">
+            <span class="balloon__tag-star">★</span>
+            <span class="balloon__tag-text">Pop Me</span>
+          </div>
+        </button>
+
+        <div class="memory-card" id="card5" aria-hidden="true">
+          <div class="memory-card__pin"></div>
+          <div class="memory-card__washi"></div>
+          <div class="memory-card__frame">
+            <div class="memory-card__img-box portrait-box-34" title="Click to view fullscreen">
+              <img src="/media/memories/Memory5.jpg" alt="Infinite Love Memory" class="memory-card__img" id="img5"
+                loading="lazy" />
+              <div class="memory-card__zoom-hint">🔍 View Fullscreen</div>
+            </div>
+            <div class="memory-card__info">
+              <span class="memory-card__badge">Memory 05 • Infinite Love</span>
+              <h3 class="memory-card__title">Forever My Chelli</h3>
+              <p class="memory-card__caption">
+                "One unbreakable bond, infinite love, and grateful every single day to have you as my sister. ♾️❤️"
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- MEMORY 06: Sibling Pride (Memory6.jpeg, 1600x1200) -->
+      <article class="memory-item memory-item--6" id="memoryItem6" data-id="6" data-revealed="false">
+        <button class="balloon-btn balloon--coral" id="balloon6" type="button"
+          aria-label="Pop Balloon 6 to reveal Sibling Pride">
+          <div class="balloon__shimmer"></div>
+          <svg class="balloon__svg" viewBox="0 0 140 180" aria-hidden="true">
+            <defs>
+              <radialGradient id="balloonGrad6" cx="36%" cy="28%" r="78%">
+                <stop offset="0%" stop-color="#fff8f0" />
+                <stop offset="28%" stop-color="#ff9068" />
+                <stop offset="72%" stop-color="#fd4b28" />
+                <stop offset="100%" stop-color="#a0230a" />
+              </radialGradient>
+              <linearGradient id="stringGrad6" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#df9d43" />
+                <stop offset="100%" stop-color="#ffbe6a" />
+              </linearGradient>
+            </defs>
+            <path class="balloon__body"
+              d="M70 10 C32 10, 14 36, 14 74 C14 112, 52 144, 66 150 L63 158 L77 158 L74 150 C88 144, 126 112, 126 74 C126 36, 108 10, 70 10 Z"
+              fill="url(#balloonGrad6)" />
+            <path class="balloon__gloss"
+              d="M42 28 C56 18, 80 18, 92 25 C98 29, 92 34, 84 31 C72 26, 52 28, 40 36 C35 39, 36 32, 42 28 Z"
+              fill="#ffffff" opacity="0.65" />
+            <ellipse class="balloon__highlight" cx="44" cy="48" rx="8" ry="15" transform="rotate(-24 44 48)"
+              fill="#ffffff" opacity="0.45" />
+            <polygon class="balloon__knot" points="64,154 76,154 78,162 62,162" fill="#851b06" />
+            <path class="balloon__string" d="M70 162 C74 185, 62 205, 72 230 C82 250, 64 270, 70 300" fill="none"
+              stroke="url(#stringGrad6)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <div class="balloon__tag">
+            <span class="balloon__tag-star">★</span>
+            <span class="balloon__tag-text">Pop Me</span>
+          </div>
+        </button>
+
+        <div class="memory-card" id="card6" aria-hidden="true">
+          <div class="memory-card__pin"></div>
+          <div class="memory-card__washi"></div>
+          <div class="memory-card__frame">
+            <div class="memory-card__img-box landscape-box-43" title="Click to view fullscreen">
+              <img src="/media/memories/Memory6.jpeg" alt="Sibling Pride Memory" class="memory-card__img" id="img6"
+                loading="lazy" />
+              <div class="memory-card__zoom-hint">🔍 View Fullscreen</div>
+            </div>
+            <div class="memory-card__info">
+              <span class="memory-card__badge">Memory 06 • Sibling Pride 💖</span>
+              <h3 class="memory-card__title">Standing Tall Together</h3>
+              <p class="memory-card__caption">
+                "Side by side, through every chapter and season of life. Having you by my side makes every ordinary day
+                feel like a celebration. You will always be my greatest pride, Chelli. 🌸❤️"
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- MEMORY 07: Pure Mischief (Memory7.jpeg, 720x1280) -->
+      <article class="memory-item memory-item--7" id="memoryItem7" data-id="7" data-revealed="false">
+        <button class="balloon-btn balloon--violet" id="balloon7" type="button"
+          aria-label="Pop Balloon 7 to reveal Pure Mischief">
+          <div class="balloon__shimmer"></div>
+          <svg class="balloon__svg" viewBox="0 0 140 180" aria-hidden="true">
+            <defs>
+              <radialGradient id="balloonGrad7" cx="36%" cy="28%" r="78%">
+                <stop offset="0%" stop-color="#fdf4ff" />
+                <stop offset="28%" stop-color="#d980f5" />
+                <stop offset="72%" stop-color="#a832cc" />
+                <stop offset="100%" stop-color="#671180" />
+              </radialGradient>
+              <linearGradient id="stringGrad7" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#df9d43" />
+                <stop offset="100%" stop-color="#ffbe6a" />
+              </linearGradient>
+            </defs>
+            <path class="balloon__body"
+              d="M70 10 C32 10, 14 36, 14 74 C14 112, 52 144, 66 150 L63 158 L77 158 L74 150 C88 144, 126 112, 126 74 C126 36, 108 10, 70 10 Z"
+              fill="url(#balloonGrad7)" />
+            <path class="balloon__gloss"
+              d="M42 28 C56 18, 80 18, 92 25 C98 29, 92 34, 84 31 C72 26, 52 28, 40 36 C35 39, 36 32, 42 28 Z"
+              fill="#ffffff" opacity="0.65" />
+            <ellipse class="balloon__highlight" cx="44" cy="48" rx="8" ry="15" transform="rotate(-24 44 48)"
+              fill="#ffffff" opacity="0.45" />
+            <polygon class="balloon__knot" points="64,154 76,154 78,162 62,162" fill="#520b66" />
+            <path class="balloon__string" d="M70 162 C66 185, 76 205, 68 230 C58 250, 76 270, 70 300" fill="none"
+              stroke="url(#stringGrad7)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <div class="balloon__tag">
+            <span class="balloon__tag-star">★</span>
+            <span class="balloon__tag-text">Pop Me</span>
+          </div>
+        </button>
+
+        <div class="memory-card" id="card7" aria-hidden="true">
+          <div class="memory-card__pin"></div>
+          <div class="memory-card__washi"></div>
+          <div class="memory-card__frame">
+            <div class="memory-card__img-box landscape-box" title="Click to view fullscreen">
+              <img src="/media/memories/Memory7.jpeg" alt="Pure Mischief Memory" class="memory-card__img" id="img7"
+                loading="lazy" />
+              <div class="memory-card__zoom-hint">🔍 View Fullscreen</div>
+            </div>
+            <div class="memory-card__info">
+              <span class="memory-card__badge">Memory 07 • Pure Mischief 🐶✨</span>
+              <h3 class="memory-card__title">Our Silly &amp; Playful Side</h3>
+              <p class="memory-card__caption">
+                "No matter how old we grow, we will never be too old to be completely silly together. Here's to non-stop
+                laughter, goofy selfies, and being each other's favorite troublemaker! 🐾😂❤️"
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- MEMORY 08: Golden Evenings (Memory8.jpeg, 899x1599) -->
+      <article class="memory-item memory-item--8" id="memoryItem8" data-id="8" data-revealed="false">
+        <button class="balloon-btn balloon--berry" id="balloon8" type="button"
+          aria-label="Pop Balloon 8 to reveal Golden Evenings">
+          <div class="balloon__shimmer"></div>
+          <svg class="balloon__svg" viewBox="0 0 140 180" aria-hidden="true">
+            <defs>
+              <radialGradient id="balloonGrad8" cx="36%" cy="28%" r="78%">
+                <stop offset="0%" stop-color="#fff0f8" />
+                <stop offset="28%" stop-color="#f76ba9" />
+                <stop offset="72%" stop-color="#cc1b69" />
+                <stop offset="100%" stop-color="#7a083a" />
+              </radialGradient>
+              <linearGradient id="stringGrad8" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#df9d43" />
+                <stop offset="100%" stop-color="#ffbe6a" />
+              </linearGradient>
+            </defs>
+            <path class="balloon__body"
+              d="M70 10 C32 10, 14 36, 14 74 C14 112, 52 144, 66 150 L63 158 L77 158 L74 150 C88 144, 126 112, 126 74 C126 36, 108 10, 70 10 Z"
+              fill="url(#balloonGrad8)" />
+            <path class="balloon__gloss"
+              d="M42 28 C56 18, 80 18, 92 25 C98 29, 92 34, 84 31 C72 26, 52 28, 40 36 C35 39, 36 32, 42 28 Z"
+              fill="#ffffff" opacity="0.65" />
+            <ellipse class="balloon__highlight" cx="44" cy="48" rx="8" ry="15" transform="rotate(-24 44 48)"
+              fill="#ffffff" opacity="0.45" />
+            <polygon class="balloon__knot" points="64,154 76,154 78,162 62,162" fill="#63042c" />
+            <path class="balloon__string" d="M70 162 C72 185, 64 205, 74 230 C84 250, 66 270, 70 300" fill="none"
+              stroke="url(#stringGrad8)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <div class="balloon__tag">
+            <span class="balloon__tag-star">★</span>
+            <span class="balloon__tag-text">Pop Me</span>
+          </div>
+        </button>
+
+        <div class="memory-card" id="card8" aria-hidden="true">
+          <div class="memory-card__pin"></div>
+          <div class="memory-card__washi"></div>
+          <div class="memory-card__frame">
+            <div class="memory-card__img-box landscape-box" title="Click to view fullscreen">
+              <img src="/media/memories/Memory8.jpeg" alt="Golden Evenings Memory" class="memory-card__img" id="img8"
+                loading="lazy" />
+              <div class="memory-card__zoom-hint">🔍 View Fullscreen</div>
+            </div>
+            <div class="memory-card__info">
+              <span class="memory-card__badge">Memory 08 • Golden Evenings ☕✨</span>
+              <h3 class="memory-card__title">Cherished Cafe Conversations</h3>
+              <p class="memory-card__caption">
+                "Good food, endless stories, sweet smiles, and heartfelt talks. The simplest evenings spent with you
+                turn into the most cherished memories I carry with me everywhere. 🍰✨💖"
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Celebration Banner (Triggers after all 5 are discovered) -->
+    <div class="celebration-banner" id="celebrationBanner" aria-hidden="true">
+      <div class="celebration-banner__card">
+        <span class="celebration-banner__icon">🎉</span>
+        <h2 class="celebration-banner__title">All Our Memories Unlocked! ❤️</h2>
+        <p class="celebration-banner__msg">
+          Thank you for being the sweetest, most wonderful sister in the world. May your year be filled with happiness
+          and boundless joy!
+        </p>
+        <div class="celebration-banner__actions">
+          <a href="index.html" class="celebration-banner__btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
+            </svg>
+            <span>Celebrate Again</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Fullscreen Photo Lightbox Modal -->
+  <div class="memory-lightbox" id="memoryLightbox" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="memory-lightbox__backdrop" id="lightboxBackdrop"></div>
+    <div class="memory-lightbox__content">
+      <button class="memory-lightbox__close" id="lightboxClose" type="button"
+        aria-label="Close fullscreen view">×</button>
+      <div class="memory-lightbox__img-wrapper">
+        <img src="" alt="Enlarged Memory Photo" class="memory-lightbox__img" id="lightboxImg" />
+      </div>
+      <div class="memory-lightbox__caption" id="lightboxCaption"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./memory.js"></script>
+</body>
+
+</html>

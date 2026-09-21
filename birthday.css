@@ -1,0 +1,899 @@
+/* ============================================================
+   HAPPY BIRTHDAY — a birthday film in four acts
+   Vanilla + GSAP. One page, one continuous piece:
+     1. a beating heart you open with a tap
+     2. it falls, and bursts into a flood of rose
+     3. a kinetic wish hinges up out of that colour
+     4. a gold light blooms, and a tree grows into a heart
+   One soft vignette lens sits over all of it. (No grain/noise.)
+   ============================================================ */
+
+:root{
+  /* --- warm paper (Act 1 + the tree's dawn) --- */
+  --paper-0:  #fff6ee;
+  --paper-1:  #f9e2d2;
+  --paper-2:  #f2c9b8;
+
+  /* --- rose flood (Acts 2–3) --- */
+  --rose-deep: #a80f43;
+  --rose:      #d4235c;
+  --rose-lift: #ff5f86;
+  --wine:      #6e0a31;
+
+  /* --- accents / ink --- */
+  --gold-1:    #ffcf6a;
+  --gold-2:    #e8a23d;
+  --ink:       #7a4a55;   /* dusty rose ink        */
+  --ink-soft:  #a9808a;   /* muted eyebrow / sub   */
+  --cream:     #fff3ea;
+
+  --ease-out:  cubic-bezier(.2,.7,.2,1);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html, body{ height:100%; }
+
+body{
+  background:#12060c;                 /* seam colour under everything */
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  cursor:auto;
+}
+
+.scene{ position:fixed; inset:0; overflow:hidden; }
+
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+/* ============================================================
+   THE TREE CANVAS (Act 4) — z0, transparent until it plays
+   ============================================================ */
+.tree{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  display:block;
+  z-index:1;
+}
+
+/* ============================================================
+   ACT 1 — THE INVITATION
+   ============================================================ */
+.hero{
+  position:absolute; inset:0;
+  z-index:3;
+  overflow:hidden;
+}
+/* the warm field the heart sits on */
+.hero__bg{
+  position:absolute; inset:0;
+  background:
+    radial-gradient(120% 88% at 50% 24%, #fff8f1 0%, var(--paper-0) 38%, var(--paper-1) 74%, var(--paper-2) 100%);
+}
+.hero__bg::after{               /* a soft warm pool of light behind the heart */
+  content:""; position:absolute; left:50%; top:44%;
+  width:min(78vw,720px); aspect-ratio:1; transform:translate(-50%,-50%);
+  background:radial-gradient(circle, rgba(255,190,150,.55), rgba(255,150,170,.16) 46%, transparent 70%);
+  filter:blur(6px);
+}
+
+/* drifting light motes (JS fills this with a few spans) */
+.hero__motes{ position:absolute; inset:0; pointer-events:none; display:none; }
+.mote{
+  position:absolute; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,236,214,.9), rgba(255,206,180,.15) 55%, transparent 72%);
+  will-change:transform, opacity;
+}
+
+.hero__eyebrow{
+  position:absolute; top:13%; left:0; right:0;
+  text-align:center;
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-style:italic; font-weight:600;
+  font-size:clamp(15px, 3.6vw, 26px);
+  letter-spacing:.06em;
+  color:#a85069;
+  text-shadow:0 1px 10px rgba(255,248,241,.9);
+  opacity:0;                          /* GSAP reveals */
+}
+
+/* ---- the target heart (GSAP animates .target on the hit → fall → burst) ---- */
+.targetWrap{
+  position:absolute; top:33%; left:0; right:0;
+  display:flex; justify-content:center;
+  transform:translateY(-50%);         /* centre at 33% — wrap is NOT animated */
+  pointer-events:none;
+}
+.target{
+  position:relative;
+  width:clamp(120px, 27vw, 208px);
+  aspect-ratio:100/92;
+  will-change:transform;
+  transform-origin:50% 60%;
+}
+.target__heart{ position:absolute; inset:0; display:block; }
+
+/* radial bloom behind the heart — swells on the beat */
+.heart__glow{
+  position:absolute; left:50%; top:52%;
+  width:230%; aspect-ratio:1; transform:translate(-50%,-50%) scale(1);
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,120,150,.55), rgba(255,90,130,.18) 42%, transparent 68%);
+  filter:blur(4px);
+  pointer-events:none;
+  will-change:transform, opacity;
+}
+.heart__svg{
+  width:100%; height:100%; display:block;
+  transform-origin:50% 60%;           /* the beat scales THIS, not the wrapper */
+  filter:
+    drop-shadow(0 10px 22px rgba(168,15,64,.34))
+    drop-shadow(0 3px 6px rgba(120,10,48,.30));
+  will-change:transform;
+}
+
+/* ---- the bow + arrow rig ----
+   Placed lower-left and rotated by JS to aim at the heart, so the shot travels
+   on a DIAGONAL. The whole rig (left/top + rotation around the grip) is set in
+   JS from measured geometry; everything below is in the rig's own space. */
+.archery{
+  position:absolute; top:0; left:0;    /* JS sets left/top so the grip anchors */
+  width:clamp(100px, 18vw, 168px);     /* smaller, daintier bow — delicate against the heart */
+  cursor:grab;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:none;                   /* we own the drag gesture */
+  will-change:transform;
+}
+.archery:active{ cursor:grabbing; }
+.archery:focus-visible{ outline:none; }
+.archery:focus-visible .bow{ filter:drop-shadow(0 0 0 3px rgba(255,255,255,.85)) drop-shadow(0 10px 18px rgba(120,50,20,.4)); }
+.bow{
+  display:block; width:100%; height:auto;
+  filter:drop-shadow(0 12px 18px rgba(90,40,15,.3));
+  overflow:visible;
+}
+
+/* the aim line rides inside the rig, so it points straight at the heart */
+.aim{
+  position:absolute; left:50%; bottom:32%;
+  width:2px; height:190%; margin-left:-1px;
+  transform-origin:bottom center;
+  background:linear-gradient(0deg, rgba(255,214,150,.6) 0%, rgba(255,150,170,.22) 52%, transparent 78%);
+  opacity:0; pointer-events:none;
+}
+
+/* the arrow overlaps the bow at the nock and flies to the heart */
+.arrow{
+  position:absolute; left:0; right:0; margin-inline:auto;
+  bottom:36%;                          /* JS re-anchors the tail to the nock */
+  width:17.5%; height:auto;
+  overflow:visible;
+  will-change:transform;
+  filter:drop-shadow(0 5px 7px rgba(90,40,15,.36));
+}
+.arrow__wings{ transform-box:fill-box; transform-origin:50% 90%; }
+.arrow__wings .wingL,
+.arrow__wings .wingR{ transform-box:fill-box; }
+.wingL{ transform-origin:88% 60%; animation:flapL 2.6s ease-in-out infinite; }
+.wingR{ transform-origin:12% 60%; animation:flapR 2.6s ease-in-out infinite; }
+@keyframes flapL{ 0%,100%{ transform:rotate(0deg); } 50%{ transform:rotate(-11deg); } }
+@keyframes flapR{ 0%,100%{ transform:rotate(0deg); } 50%{ transform:rotate(11deg); } }
+
+/* ---- the draw / release hint ---- */
+.hero__hint{
+  position:absolute; bottom:8.5%; left:0; right:0;
+  text-align:center;
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-weight:600; font-style:italic;
+  font-size:clamp(13px, 3.1vw, 19px);
+  letter-spacing:.16em; text-transform:uppercase;
+  color:#b06a7c;
+  opacity:0;                          /* GSAP reveals */
+}
+.hero__ring{ display:none; }
+
+/* ============================================================
+   THE HANDOFF BLOOM (arrow hit → dawn of the tree)
+   ============================================================ */
+.bloom{
+  position:absolute; left:50%; top:50%;
+  width:60px; height:60px; margin:-30px 0 0 -30px;
+  border-radius:50%;
+  background:radial-gradient(circle, #fff 0%, #fff2d6 30%, rgba(255,214,150,.85) 55%, rgba(255,190,150,0) 74%);
+  z-index:8; opacity:0; transform:scale(.001);
+  will-change:transform, opacity; pointer-events:none;
+}
+
+/* ============================================================
+   ACT 4 — THE HAND-LETTERED WISH (over the tree)
+   ============================================================ */
+.wish{
+  position:absolute;
+  left:clamp(16px, 5.2vw, 60px);
+  bottom:clamp(10%, 14vh, 18%);
+  width:max-content;
+  max-width:min(680px, 90vw);
+  z-index:6;
+  pointer-events:none;
+  color:var(--ink);
+  /* hard gate: wish__hero keeps opacity:1 (its clip-path drives the write-on),
+     so without this its clipped sliver + drop-shadow would leak into Acts 1–3. */
+  visibility:hidden;
+  overflow:visible;
+}
+.wish.is-in{ visibility:visible; }
+.wish::before{
+  content:""; position:absolute; inset:-24% -30% -30% -20%;
+  background:radial-gradient(84% 98% at 34% 52%, rgba(255,250,243,.94), rgba(255,250,243,.6) 48%, rgba(255,250,243,0) 80%);
+  z-index:-1; opacity:0; transition:opacity 1s ease;
+  pointer-events:none;
+}
+.wish.is-in::before{ opacity:1; }
+.wish__eyebrow{
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-style:italic; font-weight:600;
+  font-size:clamp(14px, 3.2vw, 24px);
+  letter-spacing:.05em; color:#9c4f63;
+  margin:0 0 0.2em 0;
+  text-shadow:0 1px 2px #fff8f1, 0 0 8px rgba(255,248,241,.95);
+}
+.wish__heroWrap{ position:relative; display:inline-block; width:max-content; overflow:visible; }
+.wish__line{ display:block; width:max-content; white-space:nowrap; overflow:visible; }
+.wish__line + .wish__line{ margin-top:.12em; }
+.wish__rule{ display:none !important; }
+.wish__heroWrap::before{
+  content:""; position:absolute; left:-16%; right:-16%; top:-30%; bottom:-26%;
+  background:radial-gradient(60% 70% at 46% 52%, rgba(255,214,168,.5), rgba(255,150,150,.2) 52%, transparent 74%);
+  filter:blur(16px); z-index:-1; opacity:0; pointer-events:none;
+}
+.wish__heroWrap::after{
+  content:"\2726";
+  position:absolute; right:-2%; top:-10%;
+  font-size:clamp(15px, 3.6vw, 32px);
+  color:#ffe1a0; text-shadow:0 0 12px rgba(255,205,120,.95);
+  opacity:0; pointer-events:none;
+}
+.wish__hero{
+  font-family:"Great Vibes", cursive; font-weight:400;
+  font-size:clamp(36px, 6.4vw, 72px);
+  line-height:1.14; margin:0;
+  padding:0.12em 0.18em 0.22em 0.08em;
+  width:max-content;
+  overflow:visible;
+  /* one consistent rose, top-lit — every letter reads the same */
+  background:linear-gradient(180deg, #e85a83 0%, #c41f52 50%, #9c0f42 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  /* a crisp cream edge for legibility over the tree + one soft drop */
+  filter:
+    drop-shadow(0 1px 1px rgba(255,252,248,.98))
+    drop-shadow(0 2px 6px rgba(130,18,55,.45));
+  clip-path:inset(-50% 100% -50% -30%);
+  transform-origin:8% 60%;             /* breathe from the start of the line */
+}
+.wish__rule{
+  display:block; width:clamp(46px, 13vw, 110px); height:2px;
+  margin:.12em 0 .48em;
+  background:linear-gradient(90deg, var(--gold-2), rgba(232,162,61,0));
+  box-shadow:0 0 8px rgba(255,247,240,.9);
+  transform-origin:left center;
+}
+.wish__sub{
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-weight:600; font-size:clamp(12px, 2.9vw, 20px);
+  letter-spacing:.03em; color:#6e3f4a;
+  margin:0.2em 0 0;
+  text-shadow:0 1px 2px #fff8f1, 0 0 8px rgba(255,248,241,.98);
+}
+.wish__eyebrow, .wish__rule, .wish__sub{
+  opacity:0; transform:translateY(12px); filter:blur(5px);
+  transition:opacity .8s ease, transform .9s var(--ease-out), filter .8s ease;
+}
+.wish__rule{ transform:translateY(12px) scaleX(.3); }
+.wish.is-in .wish__eyebrow,
+.wish.is-in .wish__sub{ opacity:1; transform:translateY(0); filter:blur(0); }
+.wish.is-in .wish__eyebrow{ transition-delay:0.2s; }
+.wish.is-in .wish__rule{ opacity:1; transform:translateY(0) scaleX(1); }
+.wish.is-in .wish__rule{ transition-delay:1.35s; }
+.wish.is-in .wish__sub{  transition-delay:1.55s; }
+.wish.is-in .wish__hero{
+  animation:write 1.2s cubic-bezier(.62,.04,.24,1) .35s forwards,
+            wishBreath 4s ease-in-out 1.9s infinite;
+}
+/* a gentle living breath — transform only, so it can never wash the fill out */
+@keyframes wishBreath{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.02); } }
+.wish.is-in .wish__heroWrap::before{ animation:hlin .8s ease .3s forwards, hlpulse 3.4s ease-in-out 1.7s infinite; }
+.wish.is-in .wish__heroWrap::after{ animation:twk 2.6s ease-in-out 1.6s infinite; }
+@keyframes write{ from{ clip-path:inset(-50% 100% -50% -30%); } to{ clip-path:inset(-50% -40% -50% -30%); } }
+@keyframes sheen{ 0%,18%{ background-position:0% 50%; } 60%,100%{ background-position:100% 50%; } }
+@keyframes hlin{ from{ opacity:0; transform:scale(.86); } to{ opacity:.92; transform:scale(1); } }
+@keyframes hlpulse{ 0%,100%{ opacity:.72; } 50%{ opacity:1; } }
+@keyframes twk{ 0%,100%{ opacity:0; transform:scale(.5) rotate(-12deg); } 45%{ opacity:1; transform:scale(1.05) rotate(16deg); } }
+
+/* Universal hidden rule */
+[hidden]{ display:none !important; }
+
+.message-btn{
+  position:absolute;
+  right:clamp(3%, 7vw, 10%);
+  top:54%;
+  z-index:8;
+  display:none;
+  align-items:center;
+  gap:12px;
+  padding:10px 18px 10px 14px;
+  border-radius:24px;
+  color:#7f304b;
+  background:rgba(255,248,243,.9);
+  border:1px solid rgba(171,62,93,.25);
+  box-shadow:0 12px 32px -10px rgba(110,24,52,.42), inset 0 1px 0 rgba(255,255,255,.9);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  cursor:pointer;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(10px) scale(.96);
+  transition:opacity .6s ease, transform .6s var(--ease-out), background .25s ease, box-shadow .25s ease, visibility .6s;
+  text-align:left;
+}
+.message-btn.is-shown{
+  display:inline-flex;
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+}
+.message-btn[hidden]{
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+  opacity:0 !important;
+}
+.message-btn:hover{
+  background:rgba(255,252,248,1);
+  box-shadow:0 16px 36px -8px rgba(110,24,52,.52), inset 0 1px 0 rgba(255,255,255,.95);
+  transform:translateY(-2px) scale(1.02);
+}
+.message-btn__icon{
+  display:grid;
+  place-items:center;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  color:#d63367;
+  background:rgba(255,213,226,.92);
+  font-size:14px;
+  flex-shrink:0;
+  box-shadow:0 0 0 1px rgba(214,51,103,.12);
+}
+.message-btn__text{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.message-btn__title{
+  font:700 14px/1.2 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.04em;
+  color:#7e2243;
+  white-space:nowrap;
+}
+.message-btn__sub{
+  font:500 italic 12px/1.2 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.02em;
+  color:#a84865;
+  white-space:nowrap;
+}
+
+/* --- Dedicated Fullscreen Letter Stage --- */
+.letter-stage{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .5s cubic-bezier(0.16, 1, 0.3, 1), visibility .5s;
+}
+.letter-stage.is-active{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+.letter-stage__backdrop{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at 50% 45%, rgba(255,248,242,.92) 0%, rgba(255,235,240,.95) 55%, rgba(245,210,222,.98) 100%);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  z-index:1;
+}
+.letter-stage__canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:9;
+}
+.letter-stage__header{
+  position:absolute;
+  top:clamp(16px, 3.5vh, 36px);
+  left:clamp(16px, 4vw, 42px);
+  z-index:20;
+}
+.letter-stage__back{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 18px 10px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.85);
+  border:1px solid rgba(190,70,105,.22);
+  color:#8e3052;
+  font:600 13.5px/1 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.06em;
+  cursor:pointer;
+  box-shadow:0 8px 24px -6px rgba(130,25,60,.22), inset 0 1px 0 #fff;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  transition:background .25s ease, transform .25s ease, box-shadow .25s ease, color .25s ease;
+}
+.letter-stage__back:hover{
+  background:rgba(255,255,255,.98);
+  color:#b01e4e;
+  transform:translateX(-3px);
+  box-shadow:0 12px 28px -6px rgba(130,25,60,.32);
+}
+
+.letter-stage__center{
+  position:relative;
+  z-index:5;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  box-sizing:border-box;
+}
+
+/* --- Interactive Envelope --- */
+.envelope{
+  position:relative;
+  width:min(440px, 90vw);
+  height:280px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  outline:none;
+}
+.envelope__hint{
+  position:absolute;
+  top:-54px;
+  left:50%;
+  transform:translateX(-50%);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 18px;
+  border-radius:999px;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(220,100,135,.25);
+  box-shadow:0 8px 22px -4px rgba(160,40,75,.2), inset 0 1px 0 #fff;
+  color:#a52a55;
+  font:600 italic clamp(14px, 3.2vw, 17px)/1.2 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.04em;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:8;
+  animation:hintPulse 2.4s ease-in-out infinite;
+  transition:opacity .35s ease, transform .35s ease;
+}
+@keyframes hintPulse{
+  0%,100%{ transform:translateX(-50%) translateY(0); }
+  50%{ transform:translateX(-50%) translateY(-6px); }
+}
+
+.envelope__box{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius:18px;
+  box-shadow:0 24px 60px -15px rgba(120,25,55,.32), 0 4px 16px rgba(0,0,0,.06);
+  perspective:1000px;
+  animation:envelopeFloat 4.5s ease-in-out infinite;
+  transition:opacity .45s ease, transform .45s ease;
+}
+@keyframes envelopeFloat{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-8px); }
+}
+
+.envelope__pocket-back{
+  position:absolute;
+  inset:0;
+  border-radius:18px;
+  background:linear-gradient(145deg, #fcebe4 0%, #f7d2db 100%);
+  border:1px solid rgba(220,130,150,.35);
+}
+
+.envelope__paper-peek{
+  position:absolute;
+  top:18px;
+  left:24px;
+  right:24px;
+  height:120px;
+  background:#fffcf8;
+  border-radius:10px 10px 0 0;
+  box-shadow:0 2px 10px rgba(100,20,40,.08);
+  border:1px solid rgba(230,180,190,.4);
+  border-bottom:none;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:16px 20px;
+  box-sizing:border-box;
+  z-index:2;
+}
+.envelope__paper-line{
+  display:block;
+  height:4px;
+  border-radius:2px;
+  background:rgba(210,130,155,.25);
+  width:60%;
+}
+.envelope__paper-line:last-child{ width:85%; }
+
+.envelope__pocket-bottom{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  height:100%;
+  border-radius:0 0 18px 18px;
+  background:linear-gradient(0deg, #f5c8d4 0%, #fbe4ea 68%, transparent 100%);
+  clip-path:polygon(0 100%, 100% 100%, 50% 40%);
+  z-index:4;
+}
+.envelope__pocket-left{
+  position:absolute;
+  inset:0;
+  border-radius:18px 0 0 18px;
+  background:linear-gradient(90deg, #f7ccd8 0%, #fdeaf0 100%);
+  clip-path:polygon(0 0, 0 100%, 50% 50%);
+  z-index:3;
+}
+.envelope__pocket-right{
+  position:absolute;
+  inset:0;
+  border-radius:0 18px 18px 0;
+  background:linear-gradient(270deg, #f5c4d2 0%, #fdeaf0 100%);
+  clip-path:polygon(100% 0, 100% 100%, 50% 50%);
+  z-index:3;
+}
+.envelope__flap-top{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:58%;
+  background:linear-gradient(180deg, #ffdce5 0%, #f8c9d7 100%);
+  clip-path:polygon(0 0, 100% 0, 50% 100%);
+  border-radius:18px 18px 0 0;
+  z-index:5;
+  transform-origin:top center;
+  transition:transform .65s cubic-bezier(0.4, 0, 0.2, 1), z-index .2s .3s;
+}
+
+/* Wax Seal */
+.envelope__seal{
+  position:absolute;
+  top:52%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  z-index:6;
+  width:68px;
+  height:68px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #f76890 0%, #d82b5e 55%, #9a133f 100%);
+  box-shadow:0 8px 24px -4px rgba(180,20,60,.6), inset 0 2px 4px rgba(255,255,255,.65), inset 0 -2px 5px rgba(80,0,20,.45);
+  display:grid;
+  place-items:center;
+  color:#fff;
+  transition:transform .35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity .35s ease;
+}
+.envelope:hover .envelope__seal{
+  transform:translate(-50%, -50%) scale(1.08);
+  box-shadow:0 12px 30px -2px rgba(210,30,80,.7), inset 0 2px 4px rgba(255,255,255,.8);
+}
+.envelope__seal-core{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+}
+.envelope__seal-heart{
+  font-size:18px;
+  line-height:1;
+  text-shadow:0 1px 2px rgba(80,0,20,.4);
+}
+.envelope__seal-label{
+  font:700 8.5px/1 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  opacity:.92;
+}
+
+/* --- Opened State --- */
+.envelope.is-opened .envelope__hint{
+  opacity:0;
+  transform:translateX(-50%) translateY(-12px);
+  pointer-events:none;
+}
+.envelope.is-opened .envelope__box{
+  opacity:0;
+  transform:scale(.88);
+  pointer-events:none;
+}
+.envelope.is-opened .envelope__flap-top{
+  transform:rotateX(180deg);
+  z-index:1;
+}
+.envelope.is-opened .envelope__seal{
+  opacity:0;
+  transform:translate(-50%, 20px) scale(.6);
+  pointer-events:none;
+}
+
+/* --- The Unfolded Letter Card Modal --- */
+.letter-card{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%) scale(.85);
+  width:min(490px, 92vw);
+  max-height:min(85vh, 620px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  z-index:12;
+  padding:clamp(26px, 5.5vw, 40px) clamp(22px, 5.5vw, 40px) clamp(24px, 5vw, 36px);
+  box-sizing:border-box;
+  border-radius:28px;
+  background:linear-gradient(155deg, rgba(255,252,248,.98) 0%, rgba(255,243,246,.96) 60%, rgba(255,234,240,.96) 100%);
+  border:1.5px solid rgba(220,130,155,.32);
+  box-shadow:0 32px 84px -20px rgba(100,18,45,.48), 0 0 0 1px rgba(255,255,255,.7) inset;
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .55s cubic-bezier(0.16, 1, 0.3, 1), transform .65s cubic-bezier(0.16, 1, 0.3, 1), visibility .55s;
+}
+.envelope.is-opened .letter-card{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translate(-50%, -50%) scale(1);
+  transition-delay:.22s;
+}
+
+/* Custom Scrollbar for letter card */
+.letter-card::-webkit-scrollbar{ width:6px; }
+.letter-card::-webkit-scrollbar-track{ background:transparent; }
+.letter-card::-webkit-scrollbar-thumb{ background:rgba(190,80,110,.25); border-radius:999px; }
+.letter-card::-webkit-scrollbar-thumb:hover{ background:rgba(190,80,110,.45); }
+
+.letter-card__close{
+  position:absolute;
+  top:14px;
+  right:16px;
+  width:34px;
+  height:34px;
+  border:0;
+  border-radius:50%;
+  background:rgba(170,50,85,.08);
+  color:#9c2e50;
+  font-size:24px;
+  line-height:1;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:background .2s ease, transform .2s ease, color .2s ease;
+}
+.letter-card__close:hover{
+  background:rgba(170,50,85,.18);
+  color:#c4184c;
+  transform:scale(1.08);
+}
+
+.letter-card__inner{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.letter-card__header{
+  text-align:center;
+  padding-top:4px;
+  overflow:visible;
+}
+.letter-card__deco-icon{
+  font-size:22px;
+  color:#d43c6b;
+  opacity:.65;
+  display:inline-block;
+  margin-bottom:2px;
+}
+.letter-card__eyebrow{
+  margin:0 0 4px;
+  font:600 italic clamp(13.5px, 3vw, 15.5px)/1.3 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.08em;
+  color:#ad4663;
+  text-transform:uppercase;
+}
+.letter-card__title{
+  margin:0 0 4px;
+  padding:8px 14px 4px;
+  font:400 clamp(34px, 7.5vw, 46px)/1.35 "Great Vibes", cursive;
+  background:linear-gradient(180deg, #f05e88 0%, #c41f52 45%, #920d3c 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:transparent;
+  filter:drop-shadow(0 2px 6px rgba(180,30,70,.18));
+  overflow:visible;
+  display:inline-block;
+}
+.letter-card__title-heart{
+  -webkit-text-fill-color:initial;
+  color:initial;
+  display:inline-block;
+  filter:drop-shadow(0 2px 4px rgba(210,35,80,.25));
+}
+.letter-card__rule{
+  width:60px;
+  height:2px;
+  margin:0 auto 10px;
+  background:linear-gradient(90deg, transparent, #e85a83, transparent);
+  border-radius:1px;
+}
+.letter-card__body{
+  font:500 clamp(16px, 3.4vw, 18.5px)/1.62 "Cormorant Garamond", Georgia, serif;
+  color:#592937;
+  letter-spacing:.01em;
+}
+.letter-card__body p{ margin:0 0 10px; }
+.letter-card__love{
+  margin:18px 0 6px !important;
+  font:600 italic clamp(17.5px, 3.8vw, 20.5px)/1.4 "Cormorant Garamond", Georgia, serif;
+  color:#c41f52;
+}
+.letter-card__sign{
+  margin:0 !important;
+  font:600 clamp(13.5px, 3vw, 15px)/1.3 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.08em;
+  color:#8d4458;
+}
+
+.letter-card__footer{
+  margin-top:22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+.letter-card__memories-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  max-width:270px;
+  padding:13px 26px;
+  border-radius:999px;
+  background:linear-gradient(135deg, #ff4f81 0%, #d81e57 55%, #a80f43 100%);
+  color:#fff;
+  text-decoration:none;
+  font:600 clamp(14px, 3.2vw, 16px)/1 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  box-shadow:0 10px 28px -6px rgba(196, 31, 82, 0.52), 0 0 16px rgba(255, 111, 145, 0.35), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition:transform .25s ease, box-shadow .25s ease, filter .25s ease;
+  position:relative;
+  overflow:hidden;
+}
+.letter-card__memories-btn:hover{
+  transform:translateY(-2px) scale(1.02);
+  box-shadow:0 14px 34px -4px rgba(196, 31, 82, 0.65), 0 0 22px rgba(255, 111, 145, 0.5), inset 0 1px 0 rgba(255,255,255,0.6);
+  filter:brightness(1.04);
+}
+.letter-card__memories-btn:active{
+  transform:translateY(0) scale(0.98);
+}
+.memories-btn__icon{
+  font-size:16px;
+  line-height:1;
+}
+.memories-btn__sparkle{
+  font-size:14px;
+  animation:sparkleBounce 2s ease-in-out infinite;
+}
+@keyframes sparkleBounce{
+  0%, 100%{ transform:scale(1) rotate(0deg); opacity:0.85; }
+  50%{ transform:scale(1.25) rotate(15deg); opacity:1; }
+}
+.letter-card__replay-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  max-width:180px;
+  padding:8px 18px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.85);
+  color:#9a3856;
+  border:1px solid rgba(200,60,100,.18);
+  font:600 clamp(11.5px, 2.5vw, 13px)/1 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  box-shadow:0 4px 14px -4px rgba(130,20,55,.15), inset 0 1px 0 #fff;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  transition:background .25s ease, transform .25s ease, box-shadow .25s ease, color .25s ease;
+}
+.letter-card__replay-btn:hover{
+  background:#fff;
+  color:#b01e4e;
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px -4px rgba(130,20,55,.24);
+}
+.letter-card__replay-btn svg{
+  opacity:.85;
+}
+
+@media (max-width: 900px){
+  .message-btn{ right:4%; top:58%; padding:10px 14px 10px 11px; font-size:12px; }
+}
+@media (max-width: 620px){
+  .message-btn{ top:auto; bottom:72px; right:18px; }
+  .envelope{ height:250px; }
+  .letter-card{ padding:22px 18px 20px; border-radius:22px; }
+}
+
+/* ============================================================
+   THE LENS — soft vignette over every act
+   ============================================================ */
+.grade{ position:absolute; inset:0; z-index:9; pointer-events:none; }
+.grade__vignette{
+  position:absolute; inset:0;
+  background:radial-gradient(125% 95% at 50% 42%, transparent 54%, rgba(60,18,30,.14) 84%, rgba(40,12,22,.3) 100%);
+  mix-blend-mode:multiply;
+}
+.grade__grain{
+  /* Keep the first and second pages perfectly clean and smooth — no dots,
+     paper noise, or grain overlay. The element remains in the DOM so the
+     rest of the project structure is unchanged. */
+  display:none;
+}
+
+/* ============================================================
+   REDUCED MOTION — skip the film, hand over the finished tree
+   ============================================================ */
+@media (prefers-reduced-motion: reduce){
+  .hero, .bloom{ display:none !important; }
+  .wish__eyebrow, .wish__rule, .wish__sub{ opacity:1; transform:none; filter:none; transition:none; }
+  .wish__hero{ clip-path:none; filter:drop-shadow(0 0 5px rgba(255,252,248,.98)) drop-shadow(0 2px 4px rgba(130,18,55,.5)) drop-shadow(0 4px 14px rgba(150,28,70,.32)); }
+  .wish.is-in .wish__hero{ animation:none; }
+  .wish.is-in .wish__heroWrap::before{ animation:none; opacity:.9; }
+  .wish.is-in .wish__heroWrap::after{ animation:none; opacity:0; }
+}
