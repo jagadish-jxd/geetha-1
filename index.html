@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Outfit:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&display=swap"
     rel="stylesheet" />
 
   <script>document.documentElement.classList.add('js')</script>
@@ -27,6 +27,106 @@
          intro hands off, then it draws its own warm sky + blossom tree. -->
     <canvas id="tree" class="tree" aria-label="A blossom tree grows and blooms into a heart made of petals"
       role="img"></canvas>
+
+    <!-- ============================================================
+         THE LUXURY OPENING / LOADING SCREEN (EXCLUSIVELY FOR 1ST PAGE)
+         ============================================================ -->
+    <div class="love-loader" id="loveLoader" aria-label="Loading your birthday surprise">
+      <div class="love-loader__bg" aria-hidden="true">
+        <div class="love-loader__glow love-loader__glow--1"></div>
+        <div class="love-loader__glow love-loader__glow--2"></div>
+      </div>
+
+      <div class="love-loader__content">
+        <div class="love-loader__emblem-wrap">
+          <div class="love-loader__halo" aria-hidden="true"></div>
+          <div class="love-loader__emblem" id="loveLoaderEmblem" aria-hidden="true">
+            <svg viewBox="0 0 72 64" width="72" height="64" fill="none" class="love-loader__heart-svg">
+              <defs>
+                <linearGradient id="loadGold" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#fff8d6" />
+                  <stop offset="40%" stop-color="#ffd166" />
+                  <stop offset="100%" stop-color="#f39c12" />
+                </linearGradient>
+                <linearGradient id="loadRose" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#ff7f9c" />
+                  <stop offset="55%" stop-color="#e8245f" />
+                  <stop offset="100%" stop-color="#a8154a" />
+                </linearGradient>
+                <linearGradient id="loadWing" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ffffff" />
+                  <stop offset="100%" stop-color="#ffccd8" />
+                </linearGradient>
+                <filter id="loadGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <!-- Angel wings -->
+              <g class="love-loader__wings" opacity="0.95">
+                <path d="M36 28 C18 10, 4 14, 6 28 C16 24, 26 27, 36 36 Z" fill="url(#loadWing)"
+                  stroke="rgba(218,165,32,0.6)" stroke-width="1.2" />
+                <path d="M36 28 C54 10, 68 14, 66 28 C56 24, 46 27, 36 36 Z" fill="url(#loadWing)"
+                  stroke="rgba(218,165,32,0.6)" stroke-width="1.2" />
+              </g>
+              <!-- Beating heart -->
+              <path
+                d="M36 56 C23 45, 11 34, 11 20 C11 10, 19.5 3.5 28.5 3.5 C33.5 3.5 36 6.5 36 6.5 C36 6.5 38.5 3.5 43.5 3.5 C52.5 3.5 61 10 61 20 C61 34, 49 45, 36 56 Z"
+                fill="url(#loadRose)" stroke="url(#loadGold)" stroke-width="1.8" filter="url(#loadGlow)" />
+              <ellipse cx="29" cy="16" rx="4" ry="2.2" fill="#fff" opacity="0.8" />
+            </svg>
+          </div>
+          <span class="love-loader__sparkle love-loader__sparkle--1" aria-hidden="true">✨</span>
+          <span class="love-loader__sparkle love-loader__sparkle--2" aria-hidden="true">✨</span>
+          <span class="love-loader__sparkle love-loader__sparkle--3" aria-hidden="true">💖</span>
+        </div>
+
+        <p class="love-loader__eyebrow">for you</p>
+        <h2 class="love-loader__title">Opening Something Special</h2>
+
+        <!-- Glowing progress bar -->
+        <div class="love-loader__bar-wrap" aria-hidden="true">
+          <div class="love-loader__bar" id="loveLoaderBar">
+            <div class="love-loader__bar-shimmer"></div>
+          </div>
+        </div>
+
+        <p class="love-loader__status" id="loveLoaderStatus">preparing with love...</p>
+      </div>
+    </div>
+
+    <!-- ACT 0 — THE LOVE QUESTION (NEW FIRST PAGE) ----------------------------
+         An elegant, romantic opening asking "Are you loving me or not? ❤️"
+         with a runaway "Of Course No 😏" and celebratory "Absolutely Yes ❤️". -->
+    <section class="love-gate" id="loveGate" aria-label="Are you loving me or not?">
+      <div class="love-gate__bg" aria-hidden="true">
+        <div class="love-gate__glow love-gate__glow--1"></div>
+        <div class="love-gate__glow love-gate__glow--2"></div>
+        <div class="love-gate__motes" id="loveMotes"></div>
+      </div>
+
+      <div class="love-card" id="loveCard">
+        <span class="love-card__deco" aria-hidden="true">❦</span>
+        <p class="love-card__eyebrow">a little question, just for you</p>
+        <h1 class="love-card__question">
+          “Do you love your annoying brother just a little? 🥹😂❤️”<span class="love-card__heart"
+            aria-hidden="true"></span>
+        </h1>
+        <div class="love-card__actions" id="loveActions">
+          <button class="love-btn love-btn--yes" id="loveYesBtn" type="button" aria-label="Absolutely Yes">
+            <span class="love-btn__sparkle" aria-hidden="true">✨</span>
+            <span class="love-btn__text">Absolutely Yes ❤️</span>
+          </button>
+          <button class="love-btn love-btn--no" id="loveNoBtn" type="button" aria-label="Of Course No">
+            <span class="love-btn__sparkle" aria-hidden="true">✨</span>
+            <span class="love-btn__text">Of Course No 😏</span>
+          </button>
+        </div>
+      </div>
+    </section>
 
     <!-- ACT 1 — THE INVITATION ------------------------------------------------
          A single beating heart on a warm field. It is the only thing the
@@ -179,6 +279,9 @@
 
     <!-- The gold light that bridges the arrow impact into the dawn of the tree. -->
     <div class="bloom" id="bloom" aria-hidden="true"></div>
+
+    <!-- The romantic golden-rose bloom bridging Page 1 (Love Question) into Page 2 (Cupid Bow & Arrow) -->
+    <div class="love-bloom" id="loveBloom" aria-hidden="true"></div>
 
     <!-- ACT 4 — THE HAND-LETTERED WISH (over the tree) ------------------------ -->
     <div class="wish" id="wish" aria-hidden="true">

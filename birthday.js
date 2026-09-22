@@ -55,6 +55,18 @@ const letterContent   = $('letterContent');
 const letterCloseBtn  = $('letterCloseBtn');
 const letterReturnBtn = $('letterReturnBtn');
 
+const loveGate   = $('loveGate');
+const loveCard   = $('loveCard');
+const loveYesBtn = $('loveYesBtn');
+const loveNoBtn  = $('loveNoBtn');
+const loveMotes  = $('loveMotes');
+const loveBloom  = $('loveBloom');
+
+const loveLoader       = $('loveLoader');
+const loveLoaderEmblem = $('loveLoaderEmblem');
+const loveLoaderBar    = $('loveLoaderBar');
+const loveLoaderStatus = $('loveLoaderStatus');
+
 try { sessionStorage.removeItem('allow_memories'); } catch (_) {}
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1008,9 +1020,10 @@ function enter(){
   closeLetterStage();
   resetLetter();
 
-  gsap.set(hero, { autoAlpha: 1 });
+  gsap.set([eyebrow, hint, target, archery, heartGlow], { opacity: 0 });
   refreshRig();
   setDraw(0);
+  gsap.set(hero, { autoAlpha: 1 });
   gsap.set([eyebrow, hint], { opacity: 0, y: 14 });
   gsap.set(target, { opacity: 0, y: 10, scaleX: 0.9, scaleY: 0.9 });
   gsap.set(archery, { opacity: 0, scale: 0.85 });        // scale from the grip; keeps rotation
@@ -1018,11 +1031,11 @@ function enter(){
   gsap.set(arrow, { opacity: 1 });
 
   const tl = gsap.timeline({ onComplete: startBeat });
-  tl.to(target,   { opacity: 1, y: 0, scaleX: 1, scaleY: 1, duration: 0.8, ease: 'power3.out' }, 0.1)
-    .to(heartGlow,{ opacity: 0.7, duration: 0.8, ease: 'power2.out' }, 0.2)
-    .to(archery,  { opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out' }, 0.28)
-    .to(eyebrow,  { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.4)
-    .to(hint,     { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.7);
+  tl.to(target,   { opacity: 1, y: 0, scaleX: 1, scaleY: 1, duration: 0.85, ease: 'power3.out' }, 0.1)
+    .to(heartGlow,{ opacity: 0.7, duration: 0.85, ease: 'power2.out' }, 0.2)
+    .to(archery,  { opacity: 1, scale: 1, duration: 0.85, ease: 'power3.out' }, 0.28)
+    .to(eyebrow,  { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out' }, 0.45)
+    .to(hint,     { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out' }, 0.75);
 }
 
 function armReplay(){
@@ -1039,10 +1052,494 @@ function resetAll(){
   window.bdayDone = false; replayArmed = false;
   if (filmTL){ filmTL.pause(0); }
   gsap.set(bloom, { autoAlpha: 0 });
+  if (loveBloom){ gsap.set(loveBloom, { autoAlpha: 0, scale: 0.001 }); }
   gsap.set(hero, { autoAlpha: 1 });
   gsap.set(arrow, { opacity: 1, scaleY: 1 });
   played = false;
   enter();
+}
+
+/* ============================================================
+   ACT 0 — THE LOVE QUESTION (NEW FIRST PAGE)
+   ============================================================ */
+let loveGateActive = true;
+let lastDodgeTime = 0;
+let isRunaway = false;
+
+function buildLoveMotes(){
+  if (!loveMotes) return;
+  loveMotes.innerHTML = '';
+  const heartSVGs = [
+    '<svg viewBox="0 0 24 22" fill="#ff6f97" width="100%" height="100%"><path d="M12 20C5.5 15 1.5 11.4 1.5 6.9 1.5 3.6 4 1.5 7 1.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3 0 5.5 2.1 5.5 5.4C23.5 11.4 19.5 15 12 20Z"/></svg>',
+    '<svg viewBox="0 0 24 22" fill="#ff9ebb" width="100%" height="100%"><path d="M12 20C5.5 15 1.5 11.4 1.5 6.9 1.5 3.6 4 1.5 7 1.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3 0 5.5 2.1 5.5 5.4C23.5 11.4 19.5 15 12 20Z"/></svg>',
+    '<svg viewBox="0 0 24 22" fill="#ffc2d4" width="100%" height="100%"><path d="M12 20C5.5 15 1.5 11.4 1.5 6.9 1.5 3.6 4 1.5 7 1.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3 0 5.5 2.1 5.5 5.4C23.5 11.4 19.5 15 12 20Z"/></svg>',
+  ];
+  for (let i = 0; i < 15; i++){
+    const m = document.createElement('span');
+    m.className = 'love-mote-heart';
+    const s = rand(14, 26);
+    m.style.width = `${s}px`;
+    m.style.height = `${s}px`;
+    m.style.left = `${rand(4, 94)}%`;
+    m.style.bottom = `${rand(-60, 20)}px`;
+    m.style.animationDuration = `${rand(8, 16)}s`;
+    m.style.animationDelay = `${rand(-14, 0)}s`;
+    m.innerHTML = pick(heartSVGs);
+    loveMotes.appendChild(m);
+  }
+}
+
+function dodgeNo(pointerX, pointerY){
+  if (!loveGateActive || !loveGate || loveGate.style.display === 'none' || !loveNoBtn) return;
+  const now = performance.now();
+  if (now - lastDodgeTime < 40) return;
+  lastDodgeTime = now;
+
+  const btnRect = loveNoBtn.getBoundingClientRect();
+  const yesRect = loveYesBtn ? loveYesBtn.getBoundingClientRect() : null;
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const btnW = btnRect.width || 160;
+  const btnH = btnRect.height || 50;
+
+  if (!isRunaway){
+    loveNoBtn.style.width = `${btnW}px`;
+    loveNoBtn.style.height = `${btnH}px`;
+    loveNoBtn.style.left = `${btnRect.left}px`;
+    loveNoBtn.style.top = `${btnRect.top}px`;
+    loveGate.appendChild(loveNoBtn);
+    loveNoBtn.classList.add('is-runaway');
+    isRunaway = true;
+  }
+
+  const pad = 24;
+  const minX = pad;
+  const maxX = Math.max(pad, vw - btnW - pad);
+  const minY = pad;
+  const maxY = Math.max(pad, vh - btnH - pad);
+
+  const currentX = parseFloat(loveNoBtn.style.left) || btnRect.left;
+  const currentY = parseFloat(loveNoBtn.style.top) || btnRect.top;
+
+  let targetX = minX;
+  let targetY = minY;
+  let bestDist = -1;
+
+  for (let i = 0; i < 45; i++){
+    const candX = rand(minX, maxX);
+    const candY = rand(minY, maxY);
+
+    if (yesRect){
+      const safeBuffer = 26;
+      const overlapX = candX < yesRect.right + safeBuffer && candX + btnW > yesRect.left - safeBuffer;
+      const overlapY = candY < yesRect.bottom + safeBuffer && candY + btnH > yesRect.top - safeBuffer;
+      if (overlapX && overlapY) continue;
+    }
+
+    const distCurrent = Math.hypot(candX - currentX, candY - currentY);
+    if (distCurrent < 140 && (maxX - minX > 200 || maxY - minY > 200)) continue;
+
+    let score = distCurrent;
+    if (pointerX !== undefined && pointerY !== undefined){
+      const distPointer = Math.hypot(candX + btnW / 2 - pointerX, candY + btnH / 2 - pointerY);
+      score += distPointer * 1.5;
+    }
+
+    if (score > bestDist){
+      bestDist = score;
+      targetX = candX;
+      targetY = candY;
+    }
+  }
+
+  targetX = clamp(targetX, minX, maxX);
+  targetY = clamp(targetY, minY, maxY);
+
+  const rot = rand(-8, 8);
+
+  gsap.killTweensOf(loveNoBtn);
+  gsap.to(loveNoBtn, {
+    left: targetX,
+    top: targetY,
+    rotation: rot,
+    scale: 1,
+    opacity: 1,
+    duration: 0.4,
+    ease: 'power2.out',
+  });
+}
+
+function spawnTrailSpark(x, y){
+  const el = document.createElement('span');
+  el.className = 'love-trail-spark';
+  const s = rand(6, 14);
+  el.style.left = `${x}px`;
+  el.style.top = `${y}px`;
+  el.style.width = `${s}px`;
+  el.style.height = `${s}px`;
+  el.style.marginLeft = `${-s / 2}px`;
+  el.style.marginTop = `${-s / 2}px`;
+  document.body.appendChild(el);
+
+  gsap.to(el, {
+    scale: 0.1,
+    opacity: 0,
+    x: rand(-14, 14),
+    y: rand(-8, 16),
+    duration: rand(0.35, 0.6),
+    ease: 'power2.out',
+    onComplete: () => el.remove(),
+  });
+}
+
+function celebrateYesBurst(cx, cy, count = 30){
+  const colors = ['#ff4f81', '#ff7096', '#ff94b4', '#ffd166', '#f39c12', '#e83e8c', '#ffffff'];
+  const frag = document.createDocumentFragment();
+
+  for (let i = 0; i < count; i++){
+    const isHeart = i % 2 === 0;
+    const el = document.createElement('span');
+    el.className = 'love-celebrate-burst';
+    const s = isHeart ? rand(14, 28) : rand(6, 14);
+    el.style.left = `${cx}px`;
+    el.style.top = `${cy}px`;
+    el.style.width = `${s}px`;
+    el.style.height = `${s}px`;
+    el.style.marginLeft = `${-s / 2}px`;
+    el.style.marginTop = `${-s / 2}px`;
+
+    if (isHeart){
+      el.innerHTML = miniHeartSVG(pick(colors));
+    } else {
+      el.style.borderRadius = '50%';
+      el.style.background = pick(colors);
+      el.style.boxShadow = '0 0 12px rgba(255,220,130,.9)';
+    }
+
+    frag.appendChild(el);
+
+    const ang = rand(0, Math.PI * 2);
+    const dist = rand(55, 210);
+    gsap.to(el, {
+      x: Math.cos(ang) * dist,
+      y: Math.sin(ang) * dist - rand(15, 55),
+      rotation: rand(-140, 140),
+      scale: rand(0.7, 1.35),
+      duration: rand(0.75, 1.25),
+      ease: 'power2.out',
+    });
+    gsap.to(el, {
+      opacity: 0,
+      duration: 0.5,
+      delay: rand(0.4, 0.75),
+      ease: 'power1.in',
+      onComplete: () => el.remove(),
+    });
+  }
+  document.body.appendChild(frag);
+}
+
+function resetNoButton(){
+  const actions = $('loveActions');
+  if (loveNoBtn){
+    if (actions && loveNoBtn.parentElement !== actions){
+      actions.appendChild(loveNoBtn);
+    }
+    loveNoBtn.classList.remove('is-runaway');
+    loveNoBtn.style.left = '';
+    loveNoBtn.style.top = '';
+    loveNoBtn.style.width = '';
+    loveNoBtn.style.height = '';
+    loveNoBtn.style.transform = '';
+    loveNoBtn.style.opacity = '';
+    loveNoBtn.style.pointerEvents = '';
+    loveNoBtn.disabled = false;
+    isRunaway = false;
+  }
+}
+
+function handleLoveYes(){
+  if (!loveGateActive) return;
+  loveGateActive = false;
+
+  if (loveYesBtn) loveYesBtn.disabled = true;
+  if (loveNoBtn){
+    loveNoBtn.disabled = true;
+    loveNoBtn.style.pointerEvents = 'none';
+    gsap.killTweensOf(loveNoBtn);
+    gsap.to(loveNoBtn, { opacity: 0, scale: 0.8, duration: 0.28, ease: 'power2.in' });
+  }
+
+  // Button tap pulse
+  if (loveYesBtn){
+    gsap.to(loveYesBtn, {
+      scale: 1.14,
+      duration: 0.18,
+      ease: 'back.out(2)',
+      yoyo: true,
+      repeat: 1,
+    });
+  }
+
+  if (reduceMotion){
+    gsap.to(loveGate, {
+      opacity: 0,
+      duration: 0.5,
+      ease: 'power2.inOut',
+      onComplete: () => {
+        loveGate.style.display = 'none';
+        resetNoButton();
+        enter();
+      },
+    });
+    return;
+  }
+
+  // Coordinates
+  const yesRect = loveYesBtn ? loveYesBtn.getBoundingClientRect() : { left: window.innerWidth / 2 - 80, top: window.innerHeight / 2, width: 160, height: 50 };
+  const startX = yesRect.left + yesRect.width / 2;
+  const startY = yesRect.top + yesRect.height / 2;
+  const endX = window.innerWidth / 2;
+  const endY = window.innerHeight * 0.44;
+
+  // Immediate spark burst at button
+  celebrateYesBurst(startX, startY, 14);
+
+  // Flying winged Cupid love heart projectile
+  const proj = document.createElement('div');
+  proj.className = 'love-projectile';
+  proj.innerHTML = `
+    <svg viewBox="0 0 38 32" width="100%" height="100%" fill="none" style="filter: drop-shadow(0 2px 8px rgba(255,50,100,0.85));">
+      <defs>
+        <linearGradient id="projH" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ff7f9c" />
+          <stop offset="50%" stop-color="#e8245f" />
+          <stop offset="100%" stop-color="#a8154a" />
+        </linearGradient>
+        <linearGradient id="projW" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="100%" stop-color="#ffd5df" />
+        </linearGradient>
+      </defs>
+      <path d="M19 14 C10 4, 1 7, 3 18 C8 15, 14 16, 19 21 Z" fill="url(#projW)" opacity="0.95" />
+      <path d="M19 14 C28 4, 37 7, 35 18 C30 15, 24 16, 19 21 Z" fill="url(#projW)" opacity="0.95" />
+      <path d="M19 28 C12.5 22.5 4.5 17 4.5 9.5 C4.5 4.5 9 1 14 1 C16.8 1 18.2 2.5 19 2.5 C19.8 2.5 21.2 1 24 1 C29 1 33.5 4.5 33.5 9.5 C33.5 17 25.5 22.5 19 28 Z" fill="url(#projH)" stroke="#ffe38c" stroke-width="1.2" />
+    </svg>
+  `;
+  gsap.set(proj, { left: startX, top: startY, scale: 0.6, rotation: -12 });
+  document.body.appendChild(proj);
+
+  // Flight to center
+  gsap.to(proj, {
+    left: endX,
+    top: endY,
+    scale: 1.35,
+    rotation: 6,
+    duration: 0.38,
+    ease: 'power2.out',
+    onUpdate: () => {
+      if (Math.random() < 0.6) {
+        spawnTrailSpark(gsap.getProperty(proj, 'left'), gsap.getProperty(proj, 'top'));
+      }
+    },
+    onComplete: () => {
+      // Pop and remove projectile
+      gsap.to(proj, {
+        scale: 1.8,
+        opacity: 0,
+        duration: 0.12,
+        ease: 'power1.out',
+        onComplete: () => proj.remove(),
+      });
+
+      // Expand glowing shockwave
+      const wave = document.createElement('div');
+      wave.className = 'love-shockwave';
+      wave.style.left = `${endX}px`;
+      wave.style.top = `${endY}px`;
+      document.body.appendChild(wave);
+      gsap.fromTo(wave,
+        { scale: 0.1, opacity: 1 },
+        { scale: 3.8, opacity: 0, duration: 0.55, ease: 'power2.out', onComplete: () => wave.remove() }
+      );
+
+      // Grand celebratory explosion of hearts & gold stars
+      celebrateYesBurst(endX, endY, 34);
+
+      // Radiant golden-rose bloom (inspired by Act 2->3 arrow hit bloom)
+      const reach = Math.hypot(window.innerWidth, window.innerHeight);
+      const bloomScale = (reach * 1.5) / 30;
+
+      if (loveBloom){
+        gsap.set(loveBloom, { x: endX, y: endY, scale: 0.02, autoAlpha: 1 });
+        gsap.fromTo(loveBloom,
+          { scale: 0.02 },
+          {
+            scale: bloomScale,
+            duration: 0.65,
+            ease: 'power2.in',
+            onComplete: () => {
+              // Screen is fully enveloped in golden light!
+              loveGate.style.display = 'none';
+              resetNoButton();
+
+              // Initialize Act 1 (the Cupid archery scene)
+              enter();
+
+              // Bloom gracefully dissolves away to reveal the scene (dawn effect)
+              gsap.to(loveBloom, {
+                autoAlpha: 0,
+                duration: 1.15,
+                ease: 'power2.out',
+              });
+            }
+          }
+        );
+      } else {
+        loveGate.style.display = 'none';
+        resetNoButton();
+        enter();
+      }
+
+      // Smoothly fade out loveGate as bloom expands
+      gsap.to(loveGate, {
+        opacity: 0,
+        duration: 0.45,
+        delay: 0.2,
+        ease: 'power2.inOut',
+      });
+    },
+  });
+}
+
+function runLoveGateIntro(){
+  if (!loveLoader) return;
+
+  if (reduceMotion){
+    loveLoader.style.display = 'none';
+    try { loveLoader.remove(); } catch (_) {}
+    return;
+  }
+
+  const deco = document.querySelector('.love-card__deco');
+  const eyb  = document.querySelector('.love-card__eyebrow');
+  const ques = document.querySelector('.love-card__question');
+  const acts = document.querySelector('.love-card__actions');
+
+  // Pre-hide 1st page content elements so they can be smoothly unveiled
+  if (deco) gsap.set(deco, { opacity: 0, y: -16 });
+  if (eyb)  gsap.set(eyb,  { opacity: 0, y: -12 });
+  if (ques) gsap.set(ques, { opacity: 0, y: 22, scale: 0.94 });
+  if (acts) gsap.set(acts, { opacity: 0, y: 26, scale: 0.92 });
+
+  if (loveLoaderBar){
+    gsap.to(loveLoaderBar, {
+      width: '100%',
+      duration: 1.25,
+      ease: 'power2.inOut',
+      onComplete: () => {
+        if (loveLoaderStatus){
+          loveLoaderStatus.textContent = 'unwrapping your surprise... ✨';
+        }
+
+        // Emblem pulse
+        if (loveLoaderEmblem){
+          gsap.to(loveLoaderEmblem, {
+            scale: 1.22,
+            duration: 0.28,
+            ease: 'back.out(2)',
+          });
+        }
+
+        // Silk dissolve of loader
+        gsap.to(loveLoader, {
+          opacity: 0,
+          scale: 1.05,
+          filter: 'blur(8px)',
+          duration: 0.75,
+          delay: 0.15,
+          ease: 'power2.inOut',
+          onComplete: () => {
+            loveLoader.style.display = 'none';
+            try { loveLoader.remove(); } catch (_) {}
+          },
+        });
+
+        // Choreographed entrance of Page 1 contents
+        const tl = gsap.timeline({ delay: 0.35 });
+        if (deco) tl.to(deco, { opacity: 0.9, y: 0, duration: 0.55, ease: 'power2.out' }, 0);
+        if (eyb)  tl.to(eyb,  { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' }, 0.08);
+        if (ques) tl.to(ques, { opacity: 1, y: 0, scale: 1, duration: 0.75, ease: 'back.out(1.3)' }, 0.18);
+        if (acts) {
+          tl.to(acts, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.68,
+            ease: 'back.out(1.4)',
+            clearProps: 'transform',
+          }, 0.32);
+        }
+      },
+    });
+  } else {
+    loveLoader.style.display = 'none';
+    try { loveLoader.remove(); } catch (_) {}
+  }
+}
+
+function initLoveGate(){
+  if (!loveGate) return;
+  loveGateActive = true;
+  isRunaway = false;
+  loveGate.style.display = 'flex';
+  gsap.set(loveGate, { opacity: 1 });
+  gsap.set(hero, { autoAlpha: 0 });
+  gsap.set([eyebrow, hint, target, archery, heartGlow], { opacity: 0 });
+
+  if (loveBloom){
+    gsap.set(loveBloom, { autoAlpha: 0, scale: 0.001 });
+  }
+
+  resetNoButton();
+
+  if (loveYesBtn){
+    loveYesBtn.disabled = false;
+    loveYesBtn.style.transform = '';
+  }
+
+  buildLoveMotes();
+
+  if (loveNoBtn){
+    const onNoClick = (e) => {
+      if (!loveGateActive || !loveGate || loveGate.style.display === 'none') return;
+      if (e){
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const pX = e && e.clientX !== undefined ? e.clientX : undefined;
+      const pY = e && e.clientY !== undefined ? e.clientY : undefined;
+      dodgeNo(pX, pY);
+      return false;
+    };
+
+    loveNoBtn.addEventListener('click', onNoClick);
+    loveNoBtn.addEventListener('touchend', (e) => {
+      if (!loveGateActive || !loveGate || loveGate.style.display === 'none') return;
+      e.preventDefault();
+      e.stopPropagation();
+      const t = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : null;
+      dodgeNo(t ? t.clientX : undefined, t ? t.clientY : undefined);
+    }, { passive: false });
+  }
+
+  if (loveYesBtn){
+    loveYesBtn.addEventListener('click', handleLoveYes);
+  }
+
+  // Smooth luxury opening intro ONLY for 1st page
+  runLoveGateIntro();
 }
 
 /* ============================================================
@@ -1056,7 +1553,19 @@ function resize(){
   buildSprites();
   buildScene();
   resizeLetterCanvas();
-  if (reduceMotion){ drawFinal(); return; }
+
+  if (isRunaway && loveNoBtn && loveGate && loveGateActive && loveGate.style.display !== 'none'){
+    const pad = 24;
+    const r = loveNoBtn.getBoundingClientRect();
+    const curL = parseFloat(loveNoBtn.style.left) || r.left;
+    const curT = parseFloat(loveNoBtn.style.top) || r.top;
+    const maxL = Math.max(pad, window.innerWidth - r.width - pad);
+    const maxT = Math.max(pad, window.innerHeight - r.height - pad);
+    loveNoBtn.style.left = `${clamp(curL, pad, maxL)}px`;
+    loveNoBtn.style.top = `${clamp(curT, pad, maxT)}px`;
+  }
+
+  if (reduceMotion){ if (!loveGateActive) drawFinal(); return; }
   if (played && filmTL){
     const at = filmTL.time(); const active = filmTL.isActive();
     filmTL = buildFilm(shotGeom());
@@ -1071,15 +1580,11 @@ window.addEventListener('resize', () => { if (resizeRAF) return; resizeRAF = req
 
 resize();
 
-if (reduceMotion){
-  drawFinal();
-} else {
-  // Keep the first page clean: no decorative floating dots/motes.
-  motes.innerHTML = '';
-  document.fonts && document.fonts.ready.then(() => { refreshRig(); setDraw(0); });
-  enter();
-  replay.addEventListener('click', resetAll);
-}
+motes.innerHTML = '';
+document.fonts && document.fonts.ready.then(() => { refreshRig(); setDraw(0); });
+replay.addEventListener('click', resetAll);
+
+initLoveGate();
 
 /* ============================================================
    RECORDING HOOK — the rig draws + fires after its pre-roll
