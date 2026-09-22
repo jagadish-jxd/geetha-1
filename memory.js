@@ -32,6 +32,8 @@ const burstCanvas = $('burstCanvas');
 const bctx = burstCanvas ? burstCanvas.getContext('2d') : null;
 const ambientCanvas = $('ambientCanvas');
 const actx = ambientCanvas ? ambientCanvas.getContext('2d') : null;
+const petalsCanvas = $('petalsCanvas');
+const pctx = petalsCanvas ? petalsCanvas.getContext('2d') : null;
 const celebrationBanner = $('celebrationBanner');
 
 const lightbox = $('memoryLightbox');
@@ -65,6 +67,12 @@ function resizeCanvases() {
     ambientCanvas.width = Math.round(W * dpr);
     ambientCanvas.height = Math.round(H * dpr);
     actx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  if (petalsCanvas && pctx) {
+    petalsCanvas.width = Math.round(W * dpr);
+    petalsCanvas.height = Math.round(H * dpr);
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 }
 
@@ -148,6 +156,71 @@ function drawPetal(ctx, x, y, size, color, alpha, rot) {
   ctx.fill();
   ctx.restore();
 }
+
+// ============================================================
+// FALLING HEART PETALS ENGINE (ROMANTIC AMBIENCE)
+// ============================================================
+const memoryPetals = [];
+const HEART_COLORS = [
+  '#ff4d84', '#ff7a9e', '#f4577f', '#ffd1dc', '#ffb6c1', '#f9c5d1', '#e84370', '#ffe4e8'
+];
+
+function spawnMemoryHeartPetal(initialY = null) {
+  const isHeart = Math.random() < 0.72;
+  const size = isHeart ? 14 + Math.random() * 16 : 10 + Math.random() * 12;
+  memoryPetals.push({
+    x: Math.random() * W,
+    y: initialY !== null ? initialY : -size - Math.random() * 25,
+    vx: -0.5 + Math.random() * 1.0,
+    vy: 1.1 + Math.random() * 1.6,
+    sway: 0.018 + Math.random() * 0.024,
+    swayAmp: 22 + Math.random() * 28,
+    phase: Math.random() * Math.PI * 2,
+    rot: Math.random() * Math.PI * 2,
+    vrot: -0.02 + Math.random() * 0.04,
+    size,
+    color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)],
+    alpha: 0.65 + Math.random() * 0.28,
+    isHeart,
+  });
+}
+
+// Initial romantic shower of heart petals on memory page load
+for (let i = 0; i < 30; i++) {
+  spawnMemoryHeartPetal(Math.random() * H);
+}
+
+function renderMemoryPetals() {
+  if (!pctx) return;
+  pctx.clearRect(0, 0, W, H);
+
+  // Maintain ~30-34 falling heart petals
+  if (memoryPetals.length < 34 && Math.random() < 0.28) {
+    spawnMemoryHeartPetal(-20);
+  }
+
+  for (let i = memoryPetals.length - 1; i >= 0; i--) {
+    const p = memoryPetals[i];
+    p.phase += p.sway;
+    p.x += p.vx + Math.sin(p.phase) * (p.swayAmp * 0.035);
+    p.y += p.vy;
+    p.rot += p.vrot;
+
+    if (p.isHeart) {
+      drawHeart(pctx, p.x, p.y, p.size, p.color, p.alpha, p.rot);
+    } else {
+      drawPetal(pctx, p.x, p.y, p.size, p.color, p.alpha, p.rot);
+    }
+
+    if (p.y > H + 40 || p.x < -40 || p.x > W + 40) {
+      memoryPetals.splice(i, 1);
+      spawnMemoryHeartPetal(-25);
+    }
+  }
+
+  requestAnimationFrame(renderMemoryPetals);
+}
+requestAnimationFrame(renderMemoryPetals);
 
 function spawnBalloonBurst(cx, cy, count = 48) {
   for (let i = 0; i < count; i++) {
@@ -359,5 +432,16 @@ window.addEventListener('keydown', (e) => {
     closeLightbox();
   }
 });
+
+// Smooth entrance fade from letter page
+const pageTransitionVeil = document.getElementById('pageTransitionVeil');
+if (pageTransitionVeil) {
+  requestAnimationFrame(() => {
+    pageTransitionVeil.classList.add('is-hidden');
+    setTimeout(() => {
+      try { pageTransitionVeil.remove(); } catch (_) {}
+    }, 500);
+  });
+}
 
 initHeartCursor();

@@ -39,6 +39,29 @@ html, body {
 }
 
 /* ============================================================
+   SMOOTH PAGE TRANSITION VEIL (LETTER ↔ MEMORIES)
+   ============================================================ */
+.page-transition-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(circle at 50% 30%, #ffffff 0%, #fff3f6 35%, #fde6ee 70%, #f9d5e2 100%);
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity;
+}
+
+.page-transition-veil.is-hidden {
+  opacity: 0;
+}
+
+.page-transition-veil.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================================================
    AMBIENT DREAMY BACKGROUND
    ============================================================ */
 
@@ -106,6 +129,16 @@ html, body {
   pointer-events: none;
 }
 
+/* Falling Heart Petals Canvas */
+.petals-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 45;
+  pointer-events: none;
+}
+
 /* ============================================================
    MAIN CONTAINER & HEADER
    ============================================================ */
@@ -129,7 +162,7 @@ html, body {
 .memory-header__nav {
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: 16px;
   margin-bottom: clamp(24px, 4vw, 36px);

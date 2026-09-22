@@ -56,6 +56,12 @@ const letterContent   = $('letterContent');
 const letterCloseBtn  = $('letterCloseBtn');
 const letterReturnBtn = $('letterReturnBtn');
 
+const memoriesLanding         = $('memoriesLanding');
+const memoriesLandingContent  = $('memoriesLandingContent');
+const memoriesLandingPolaroid = $('memoriesLandingPolaroid');
+const memoriesLandingBar      = $('memoriesLandingBar');
+const memoriesLandingStatus   = $('memoriesLandingStatus');
+
 const loveGate   = $('loveGate');
 const loveCard   = $('loveCard');
 const loveYesBtn = $('loveYesBtn');
@@ -544,13 +550,13 @@ function spawnBurstPetals(count = 32){
   }
 }
 
-function spawnTopPetal(){
+function spawnTopPetal(initialY = null){
   const lw = window.innerWidth;
   const lh = window.innerHeight;
   const baseBox = Math.min(lw, lh) * 0.055;
   letterPetals.push({
     x: rand(-20, lw + 20),
-    y: rand(-50, -10),
+    y: initialY !== null ? initialY : rand(-50, -10),
     vx: rand(-30, 30),
     vy: rand(65, 130),
     gravity: rand(18, 42),
@@ -560,9 +566,9 @@ function spawnTopPetal(){
     phase: rand(0, Math.PI * 2),
     box: clamp(baseBox * rand(0.5, 1.15), 16, 46),
     idx: (Math.random() * (SPR.crisp.length || 6)) | 0,
-    alpha: 0,
-    age: 0,
-    maxAge: rand(5.5, 8.5),
+    alpha: initialY !== null ? rand(0.55, 0.9) : 0,
+    age: initialY !== null ? 0.35 : 0,
+    maxAge: rand(6.5, 9.5),
   });
 }
 
@@ -575,8 +581,7 @@ function letterFrame(now){
   const lh = window.innerHeight;
   if (lctx) lctx.clearRect(0, 0, lw, lh);
 
-  const elapsed = now - letterOpenTime;
-  if (elapsed < LETTER_SHOWER_DURATION && now - lastLetterSpawn > 160 && letterPetals.length < 40){
+  if (letterStage && letterStage.classList.contains('is-active') && now - lastLetterSpawn > 150 && letterPetals.length < 45){
     spawnTopPetal();
     if (Math.random() < 0.4) spawnTopPetal();
     lastLetterSpawn = now;
@@ -613,7 +618,7 @@ function letterFrame(now){
     }
   }
 
-  if (letterStage && letterStage.classList.contains('is-active') && envelopeCard && envelopeCard.classList.contains('is-opened') && (letterPetals.length > 0 || elapsed < LETTER_SHOWER_DURATION)){
+  if (letterStage && letterStage.classList.contains('is-active') && letterPetals.length > 0){
     letterRAF = requestAnimationFrame(letterFrame);
   } else {
     letterRAF = 0;
@@ -627,6 +632,38 @@ function openLetterStage(){
     letterStage.setAttribute('aria-hidden', 'false');
     messageBtn.setAttribute('aria-expanded', 'true');
     cue('open_letter_stage');
+
+    // Subtle press feedback on message button
+    gsap.to(messageBtn, {
+      scale: 0.94,
+      duration: 0.12,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power1.inOut',
+    });
+
+    // Smooth envelope entrance
+    if (envelopeCard){
+      gsap.fromTo(envelopeCard,
+        { scale: 0.88, y: 24, opacity: 0 },
+        { scale: 1, y: 0, opacity: 1, duration: 0.55, ease: 'back.out(1.4)' }
+      );
+    }
+
+    // Immediately start falling heart petals shower
+    resizeLetterCanvas();
+    letterPetals = [];
+    letterOpenTime = performance.now();
+    lastLetterSpawn = performance.now();
+
+    for (let i = 0; i < 28; i++){
+      spawnTopPetal(rand(-40, window.innerHeight * 0.85));
+    }
+
+    if (!letterRAF){
+      letterLastT = 0;
+      letterRAF = requestAnimationFrame(letterFrame);
+    }
   }
 }
 
@@ -650,10 +687,9 @@ function openLetter(){
     if (letterContent) letterContent.setAttribute('aria-hidden', 'false');
     cue('open_letter');
     resizeLetterCanvas();
-    letterPetals = [];
     letterOpenTime = performance.now();
     lastLetterSpawn = performance.now();
-    spawnBurstPetals(32);
+    spawnBurstPetals(36);
     if (!letterRAF){
       letterLastT = 0;
       letterRAF = requestAnimationFrame(letterFrame);
@@ -678,10 +714,119 @@ messageBtn.addEventListener('click', openLetterStage);
 if (letterBackBtn) letterBackBtn.addEventListener('click', closeLetterStage);
 if (letterBackdrop) letterBackdrop.addEventListener('click', closeLetterStage);
 if (letterCloseBtn) letterCloseBtn.addEventListener('click', closeLetterStage);
+let isMemoriesTransitioning = false;
+
+function triggerMemoriesTransition(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  if (isMemoriesTransitioning) return;
+  isMemoriesTransitioning = true;
+
+  try { sessionStorage.setItem('allow_memories', '1'); } catch (_) {}
+
+  // If reduced motion, navigate immediately
+  if (reduceMotion) {
+    window.location.href = 'memory.html';
+    return;
+  }
+
+  // Soft subtle press feedback on button
+  if (memoriesBtn) {
+    gsap.to(memoriesBtn, {
+      scale: 0.95,
+      duration: 0.12,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power1.inOut',
+    });
+  }
+
+  // Extra shower of falling heart petals cascading down
+  for (let i = 0; i < 24; i++){
+    spawnTopPetal(rand(-40, window.innerHeight * 0.5));
+  }
+
+  // Smooth fade out of letter modal
+  if (letterContent) {
+    gsap.to(letterContent, {
+      opacity: 0,
+      y: -16,
+      duration: 0.38,
+      ease: 'power2.in',
+    });
+  }
+
+  // Smoothly reveal the small Our Memories landing screen
+  if (memoriesLanding) {
+    memoriesLanding.classList.add('is-active');
+
+    gsap.fromTo(memoriesLanding,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.5, ease: 'power2.out' }
+    );
+
+    if (memoriesLandingContent) {
+      gsap.fromTo(memoriesLandingContent,
+        { scale: 0.88, y: 22 },
+        { scale: 1, y: 0, duration: 0.58, ease: 'back.out(1.5)' }
+      );
+    }
+
+    // 2.2s progress bar animation
+    if (memoriesLandingBar) {
+      gsap.to(memoriesLandingBar, {
+        width: '100%',
+        duration: 2.2,
+        ease: 'power1.inOut',
+      });
+    }
+
+    // Dynamic staged subtitle updates
+    if (memoriesLandingStatus) {
+      setTimeout(() => {
+        memoriesLandingStatus.textContent = 'unfolding your memory scrapbook... ✨';
+      }, 1100);
+
+      setTimeout(() => {
+        memoriesLandingStatus.textContent = 'ready with love... 💖';
+      }, 2300);
+    }
+
+    // Gentle celebratory pulse on the polaroid keepsake
+    if (memoriesLandingPolaroid) {
+      setTimeout(() => {
+        gsap.to(memoriesLandingPolaroid, {
+          scale: 1.12,
+          duration: 0.22,
+          yoyo: true,
+          repeat: 1,
+          ease: 'back.out(2)',
+        });
+      }, 2100);
+    }
+
+    // Smooth silky dissolve into memory.html
+    setTimeout(() => {
+      gsap.to(memoriesLanding, {
+        opacity: 0,
+        duration: 0.45,
+        ease: 'power2.out',
+        onComplete: () => {
+          window.location.href = 'memory.html';
+        },
+      });
+    }, 2650);
+  } else {
+    setTimeout(() => {
+      window.location.href = 'memory.html';
+    }, 420);
+  }
+}
+
 if (memoriesBtn) {
-  memoriesBtn.addEventListener('click', () => {
-    try { sessionStorage.setItem('allow_memories', '1'); } catch (_) {}
-  });
+  memoriesBtn.addEventListener('click', triggerMemoriesTransition);
 }
 
 if (envelopeCard){

@@ -38,6 +38,9 @@
 </head>
 
 <body>
+  <!-- Smooth page transition veil between letter and memory page -->
+  <div class="page-transition-veil" id="pageTransitionVeil" aria-hidden="true"></div>
+
   <!-- Ambient Dreamy Romantic Background -->
   <div class="memory-bg" aria-hidden="true">
     <div class="memory-bg__radial"></div>
@@ -49,20 +52,14 @@
   <!-- Burst Particle FX Canvas for Balloon Pops -->
   <canvas class="burst-canvas" id="burstCanvas" aria-hidden="true"></canvas>
 
+  <!-- Falling Heart Petals Canvas -->
+  <canvas class="petals-canvas" id="petalsCanvas" aria-hidden="true"></canvas>
+
   <!-- Main Album Container -->
   <main class="memory-album" id="memoryAlbum">
     <!-- Top Bar Navigation & Counter -->
     <header class="memory-header">
       <div class="memory-header__nav">
-        <a href="index.html" class="memory-back-btn" id="memoryBackBtn" aria-label="Back to Birthday Tree">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor"
-            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          <span>Back to Birthday</span>
-        </a>
-
         <div class="memory-counter" id="memoryCounter" aria-live="polite">
           <span class="memory-counter__dot"></span>
           <span class="memory-counter__text" id="counterText">0 of 8 Memories Discovered</span>

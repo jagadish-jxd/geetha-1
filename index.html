@@ -299,18 +299,6 @@
       <div class="letter-stage__backdrop" id="letterBackdrop"></div>
       <canvas class="letter-stage__canvas" id="letterCanvas"></canvas>
 
-      <!-- Top Nav Header -->
-      <div class="letter-stage__header">
-        <button class="letter-stage__back" id="letterBackBtn" type="button" aria-label="Back to Tree">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor"
-            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          <span>Back to Tree</span>
-        </button>
-      </div>
-
       <!-- Centered Interactive Envelope & Letter Container -->
       <div class="letter-stage__center">
         <div class="envelope" id="envelopeCard" role="button" tabindex="0" aria-label="Click to open birthday letter">
@@ -408,6 +396,44 @@
 
   <!-- Accessible equivalent for reduced-motion + screen readers. -->
   <p class="sr-only">Happy Birthday Raa Chelli. Here&rsquo;s to a wonderful year ahead.</p>
+
+  <!-- ============================================================
+       OUR MEMORIES SMALL LANDING SCREEN
+       ============================================================ -->
+  <div class="memories-landing" id="memoriesLanding" aria-hidden="true" aria-label="Opening Our Memories">
+    <div class="memories-landing__bg" aria-hidden="true">
+      <div class="memories-landing__glow memories-landing__glow--1"></div>
+      <div class="memories-landing__glow memories-landing__glow--2"></div>
+    </div>
+
+    <div class="memories-landing__content" id="memoriesLandingContent">
+      <div class="memories-landing__emblem-wrap">
+        <div class="memories-landing__halo" aria-hidden="true"></div>
+        <div class="memories-landing__polaroid" id="memoriesLandingPolaroid" aria-hidden="true">
+          <div class="memories-landing__polaroid-lens">
+            <span class="memories-landing__cam-icon">📸</span>
+            <span class="memories-landing__heart-badge">❤️</span>
+          </div>
+          <p class="memories-landing__polaroid-caption">Geetha & Jagadish 💖</p>
+        </div>
+        <span class="memories-landing__sparkle memories-landing__sparkle--1" aria-hidden="true">✨</span>
+        <span class="memories-landing__sparkle memories-landing__sparkle--2" aria-hidden="true">💖</span>
+        <span class="memories-landing__sparkle memories-landing__sparkle--3" aria-hidden="true">✨</span>
+      </div>
+
+      <p class="memories-landing__eyebrow">Chapter IV</p>
+      <h2 class="memories-landing__title">Our Memories</h2>
+
+      <!-- Golden Shimmer Progress Capsule -->
+      <div class="memories-landing__bar-wrap" aria-hidden="true">
+        <div class="memories-landing__bar" id="memoriesLandingBar">
+          <div class="memories-landing__bar-shimmer"></div>
+        </div>
+      </div>
+
+      <p class="memories-landing__status" id="memoriesLandingStatus">gathering our cherished moments... 🌸</p>
+    </div>
+  </div>
 
   <script type="module" src="./birthday.js"></script>
 </body>
