@@ -1,6 +1,7 @@
 /* ============================================================
    OUR LITTLE MEMORIES — Interactive Memory Album Engine
    ============================================================ */
+import { initHeartCursor } from './heart-cursor.js';
 
 // 1. Immediate Browser Refresh Guard (Redirects to first page on refresh)
 (function checkRefreshGuard() {
@@ -358,3 +359,5 @@ window.addEventListener('keydown', (e) => {
     closeLightbox();
   }
 });
+
+initHeartCursor();

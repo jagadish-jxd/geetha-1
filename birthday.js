@@ -20,6 +20,7 @@
    ============================================================ */
 
 import gsap from 'gsap';
+import { initHeartCursor } from './heart-cursor.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -1422,70 +1423,67 @@ function runLoveGateIntro(){
     return;
   }
 
-  const deco = document.querySelector('.love-card__deco');
-  const eyb  = document.querySelector('.love-card__eyebrow');
-  const ques = document.querySelector('.love-card__question');
-  const acts = document.querySelector('.love-card__actions');
+  // Pre-set loveCard with slight offset and zero opacity on GPU layer
+  if (loveCard){
+    gsap.set(loveCard, { opacity: 0, y: 16 });
+  }
 
-  // Pre-hide 1st page content elements so they can be smoothly unveiled
-  if (deco) gsap.set(deco, { opacity: 0, y: -16 });
-  if (eyb)  gsap.set(eyb,  { opacity: 0, y: -12 });
-  if (ques) gsap.set(ques, { opacity: 0, y: 22, scale: 0.94 });
-  if (acts) gsap.set(acts, { opacity: 0, y: 26, scale: 0.92 });
+  // 5-second choreographed landing screen presentation
+  const introTL = gsap.timeline();
 
+  // Progress bar fills smoothly across 4.6 seconds
   if (loveLoaderBar){
-    gsap.to(loveLoaderBar, {
+    introTL.to(loveLoaderBar, {
       width: '100%',
-      duration: 1.25,
-      ease: 'power2.inOut',
-      onComplete: () => {
-        if (loveLoaderStatus){
-          loveLoaderStatus.textContent = 'unwrapping your surprise... ✨';
-        }
+      duration: 4.6,
+      ease: 'power1.inOut',
+    }, 0);
+  }
 
-        // Emblem pulse
-        if (loveLoaderEmblem){
-          gsap.to(loveLoaderEmblem, {
-            scale: 1.22,
-            duration: 0.28,
-            ease: 'back.out(2)',
-          });
-        }
+  // Staged subtitle updates throughout the 5 seconds
+  if (loveLoaderStatus){
+    introTL.call(() => {
+      loveLoaderStatus.textContent = 'gathering sweet memories... 🌸';
+    }, null, 1.5);
 
-        // Silk dissolve of loader
-        gsap.to(loveLoader, {
-          opacity: 0,
-          scale: 1.05,
-          filter: 'blur(8px)',
-          duration: 0.75,
-          delay: 0.15,
-          ease: 'power2.inOut',
-          onComplete: () => {
-            loveLoader.style.display = 'none';
-            try { loveLoader.remove(); } catch (_) {}
-          },
-        });
+    introTL.call(() => {
+      loveLoaderStatus.textContent = 'unwrapping your surprise... ✨';
+    }, null, 3.2);
 
-        // Choreographed entrance of Page 1 contents
-        const tl = gsap.timeline({ delay: 0.35 });
-        if (deco) tl.to(deco, { opacity: 0.9, y: 0, duration: 0.55, ease: 'power2.out' }, 0);
-        if (eyb)  tl.to(eyb,  { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' }, 0.08);
-        if (ques) tl.to(ques, { opacity: 1, y: 0, scale: 1, duration: 0.75, ease: 'back.out(1.3)' }, 0.18);
-        if (acts) {
-          tl.to(acts, {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.68,
-            ease: 'back.out(1.4)',
-            clearProps: 'transform',
-          }, 0.32);
-        }
-      },
-    });
-  } else {
-    loveLoader.style.display = 'none';
-    try { loveLoader.remove(); } catch (_) {}
+    introTL.call(() => {
+      loveLoaderStatus.textContent = 'ready for you! 💖';
+    }, null, 4.6);
+  }
+
+  // At 4.7s: Gentle celebratory pulse on emblem
+  if (loveLoaderEmblem){
+    introTL.to(loveLoaderEmblem, {
+      scale: 1.16,
+      duration: 0.28,
+      ease: 'back.out(2)',
+    }, 4.7);
+  }
+
+  // At exactly 5.0 seconds: Silky dissolve of the landing screen
+  introTL.to(loveLoader, {
+    opacity: 0,
+    duration: 0.55,
+    ease: 'power2.out',
+    onComplete: () => {
+      loveLoader.style.display = 'none';
+      try { loveLoader.remove(); } catch (_) {}
+    },
+  }, 5.0);
+
+  // Smooth, lag-free glide entrance of the question card
+  if (loveCard){
+    introTL.to(loveCard, {
+      opacity: 1,
+      y: 0,
+      duration: 0.65,
+      ease: 'power2.out',
+      clearProps: 'transform',
+    }, 5.1);
   }
 }
 
@@ -1585,6 +1583,7 @@ document.fonts && document.fonts.ready.then(() => { refreshRig(); setDraw(0); })
 replay.addEventListener('click', resetAll);
 
 initLoveGate();
+initHeartCursor();
 
 /* ============================================================
    RECORDING HOOK — the rig draws + fires after its pre-roll

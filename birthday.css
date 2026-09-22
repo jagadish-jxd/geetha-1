@@ -905,6 +905,9 @@ body{
   user-select:none;
   -webkit-user-select:none;
   pointer-events:auto;
+  will-change:transform, opacity;
+  transform:translateZ(0);
+  backface-visibility:hidden;
 }
 
 .love-loader__bg{
@@ -1164,6 +1167,8 @@ body{
   border:none;
   box-shadow:none;
   text-align:center;
+  will-change:transform, opacity;
+  transform:translateZ(0);
 }
 
 .love-card__deco{
@@ -1285,7 +1290,7 @@ body{
     0 10px 28px rgba(225, 35, 92, 0.38),
     0 4px 10px rgba(180, 20, 70, 0.15),
     inset 0 1px 1px rgba(255, 255, 255, 0.55);
-  transition:transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease;
+  transition:box-shadow 0.22s ease;
 }
 
 .love-btn--yes:hover,
@@ -1294,6 +1299,7 @@ body{
   box-shadow:
     0 16px 36px rgba(225, 35, 92, 0.54),
     0 6px 16px rgba(180, 20, 70, 0.25) !important;
+  transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease;
 }
 
 .love-btn--yes:active,
