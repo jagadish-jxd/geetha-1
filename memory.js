@@ -433,15 +433,30 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Smooth entrance fade from letter page
+// Smooth entrance fade from Chapter 4 memories landing screen
 const pageTransitionVeil = document.getElementById('pageTransitionVeil');
 if (pageTransitionVeil) {
-  requestAnimationFrame(() => {
-    pageTransitionVeil.classList.add('is-hidden');
-    setTimeout(() => {
-      try { pageTransitionVeil.remove(); } catch (_) {}
-    }, 500);
-  });
+  let veilLifted = false;
+  const liftVeil = () => {
+    if (veilLifted) return;
+    veilLifted = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        pageTransitionVeil.classList.add('is-hidden');
+        setTimeout(() => {
+          try { pageTransitionVeil.remove(); } catch (_) {}
+        }, 700);
+      });
+    });
+  };
+
+  if (document.readyState === 'complete') {
+    setTimeout(liftVeil, 60);
+  } else {
+    window.addEventListener('load', () => setTimeout(liftVeil, 60), { once: true });
+    // Failsafe in case external resources delay load event
+    setTimeout(liftVeil, 350);
+  }
 }
 
 initHeartCursor();

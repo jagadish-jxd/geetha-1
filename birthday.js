@@ -726,6 +726,20 @@ function triggerMemoriesTransition(e) {
 
   try { sessionStorage.setItem('allow_memories', '1'); } catch (_) {}
 
+  // Silently prefetch memory page assets & photos during Chapter 4
+  try {
+    ['memory.html', './memory.css', './memory.js'].forEach((href) => {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = href;
+      document.head.appendChild(link);
+    });
+    ['/media/memories/Memory1.jpg', '/media/memories/Memory2.jpg', '/media/memories/Memory3.jpg'].forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  } catch (_) {}
+
   // If reduced motion, navigate immediately
   if (reduceMotion) {
     window.location.href = 'memory.html';
@@ -761,6 +775,7 @@ function triggerMemoriesTransition(e) {
   // Smoothly reveal the small Our Memories landing screen
   if (memoriesLanding) {
     memoriesLanding.classList.add('is-active');
+    memoriesLanding.setAttribute('aria-hidden', 'false');
 
     gsap.fromTo(memoriesLanding,
       { opacity: 0 },
@@ -769,8 +784,8 @@ function triggerMemoriesTransition(e) {
 
     if (memoriesLandingContent) {
       gsap.fromTo(memoriesLandingContent,
-        { scale: 0.88, y: 22 },
-        { scale: 1, y: 0, duration: 0.58, ease: 'back.out(1.5)' }
+        { scale: 0.88, y: 22, opacity: 0 },
+        { scale: 1, y: 0, opacity: 1, duration: 0.58, ease: 'back.out(1.5)' }
       );
     }
 
@@ -807,16 +822,23 @@ function triggerMemoriesTransition(e) {
       }, 2100);
     }
 
-    // Smooth silky dissolve into memory.html
+    // Smooth silky dissolve into memory.html:
+    // We gently fade out and lift the inner content (card, title, bar)
+    // while keeping the radiant rose-cream background 100% opaque.
+    // This prevents any visual flicker or flash of the tree canvas before navigation!
     setTimeout(() => {
-      gsap.to(memoriesLanding, {
-        opacity: 0,
-        duration: 0.45,
-        ease: 'power2.out',
-        onComplete: () => {
-          window.location.href = 'memory.html';
-        },
-      });
+      if (memoriesLandingContent) {
+        gsap.to(memoriesLandingContent, {
+          opacity: 0,
+          y: -18,
+          scale: 1.04,
+          duration: 0.45,
+          ease: 'power2.in',
+        });
+      }
+      setTimeout(() => {
+        window.location.href = 'memory.html';
+      }, 420);
     }, 2650);
   } else {
     setTimeout(() => {
@@ -827,6 +849,12 @@ function triggerMemoriesTransition(e) {
 
 if (memoriesBtn) {
   memoriesBtn.addEventListener('click', triggerMemoriesTransition);
+  memoriesBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      triggerMemoriesTransition(e);
+    }
+  });
 }
 
 if (envelopeCard){

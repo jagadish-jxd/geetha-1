@@ -39,26 +39,29 @@ html, body {
 }
 
 /* ============================================================
-   SMOOTH PAGE TRANSITION VEIL (LETTER ↔ MEMORIES)
+   SMOOTH PAGE TRANSITION VEIL (CHAPTER 4 ↔ MEMORIES)
    ============================================================ */
 .page-transition-veil {
   position: fixed;
   inset: 0;
-  z-index: 9999;
-  background: radial-gradient(circle at 50% 30%, #ffffff 0%, #fff3f6 35%, #fde6ee 70%, #f9d5e2 100%);
+  z-index: 99999;
+  background: radial-gradient(130% 95% at 50% 32%, #fffcf9 0%, #fff2f5 35%, #fde4ec 72%, #f8c9d8 100%);
   opacity: 1;
-  pointer-events: none;
-  transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: auto;
+  transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), visibility 0.6s ease;
   will-change: opacity;
 }
 
 .page-transition-veil.is-hidden {
   opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .page-transition-veil.is-active {
   opacity: 1;
   pointer-events: auto;
+  visibility: visible;
 }
 
 /* ============================================================
@@ -150,6 +153,18 @@ html, body {
   max-width: 1320px;
   margin: 0 auto;
   padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 44px) 80px;
+  animation: memoryAlbumEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes memoryAlbumEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .memory-header {
