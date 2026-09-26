@@ -21,6 +21,9 @@
 
 import gsap from 'gsap';
 import { initHeartCursor } from './heart-cursor.js';
+import { musicManager } from './music.js';
+import { initMemoryPage } from './memory.js';
+import './memory.css';
 
 const $ = (id) => document.getElementById(id);
 
@@ -75,6 +78,8 @@ const loveLoaderBar    = $('loveLoaderBar');
 const loveLoaderStatus = $('loveLoaderStatus');
 
 try { sessionStorage.removeItem('allow_memories'); } catch (_) {}
+musicManager.setupFirstInteractionListener();
+musicManager.start();
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isRecord     = new URLSearchParams(location.search).has('record');
@@ -715,6 +720,47 @@ if (letterBackBtn) letterBackBtn.addEventListener('click', closeLetterStage);
 if (letterBackdrop) letterBackdrop.addEventListener('click', closeLetterStage);
 if (letterCloseBtn) letterCloseBtn.addEventListener('click', closeLetterStage);
 let isMemoriesTransitioning = false;
+function transitionToMemoryPage() {
+  const scene = document.querySelector('.scene');
+  if (scene) scene.style.display = 'none';
+
+  const memContainer = document.getElementById('memoryContainer');
+  if (memContainer) {
+    memContainer.style.display = 'block';
+  }
+
+  // Remove fixed height / overflow constraints from html and body so scrapbook scrolls smoothly
+  document.documentElement.style.height = 'auto';
+  document.documentElement.style.overflow = 'auto';
+  document.documentElement.style.overflowX = 'hidden';
+
+  document.body.style.height = 'auto';
+  document.body.style.minHeight = '100vh';
+  document.body.style.overflow = 'auto';
+  document.body.style.overflowX = 'hidden';
+  document.body.style.backgroundColor = '#fff9f5';
+  document.body.classList.add('is-memory-page');
+
+  // Immediately hide and remove memoriesLanding overlay so it cannot block the view
+  if (memoriesLanding) {
+    memoriesLanding.style.display = 'none';
+    try { memoriesLanding.remove(); } catch (_) {}
+  }
+
+  document.title = 'Our Little Memories ❤️ — A Special Birthday Album';
+  try {
+    window.history.replaceState({ page: 'home' }, '', 'index.html');
+  } catch (_) {}
+
+  // Initialize interactive memory album (balloons, canvases, lightbox, etc.)
+  try {
+    initMemoryPage();
+  } catch (err) {
+    console.error('Error initializing memory page:', err);
+  }
+
+  window.scrollTo(0, 0);
+}
 
 function triggerMemoriesTransition(e) {
   if (e) {
@@ -742,7 +788,7 @@ function triggerMemoriesTransition(e) {
 
   // If reduced motion, navigate immediately
   if (reduceMotion) {
-    window.location.href = 'memory.html';
+    transitionToMemoryPage();
     return;
   }
 
@@ -837,12 +883,12 @@ function triggerMemoriesTransition(e) {
         });
       }
       setTimeout(() => {
-        window.location.href = 'memory.html';
+        transitionToMemoryPage();
       }, 420);
     }, 2650);
   } else {
     setTimeout(() => {
-      window.location.href = 'memory.html';
+      transitionToMemoryPage();
     }, 420);
   }
 }
@@ -1163,6 +1209,7 @@ function autoFire(){
 }
 
 archery.addEventListener('pointerdown', (e) => {
+  musicManager.start();
   if (played) return;
   drawing = true;
   try { archery.setPointerCapture(e.pointerId); } catch (_) {}
@@ -1434,6 +1481,7 @@ function resetNoButton(){
 }
 
 function handleLoveYes(){
+  musicManager.start();
   if (!loveGateActive) return;
   loveGateActive = false;
 
@@ -1590,6 +1638,9 @@ function handleLoveYes(){
 function runLoveGateIntro(){
   if (!loveLoader) return;
 
+  loveLoader.addEventListener('pointerdown', () => musicManager.start(), { passive: true });
+  loveLoader.addEventListener('click', () => musicManager.start(), { passive: true });
+
   if (reduceMotion){
     loveLoader.style.display = 'none';
     try { loveLoader.remove(); } catch (_) {}
@@ -1684,6 +1735,7 @@ function initLoveGate(){
 
   if (loveNoBtn){
     const onNoClick = (e) => {
+      musicManager.start();
       if (!loveGateActive || !loveGate || loveGate.style.display === 'none') return;
       if (e){
         e.preventDefault();
@@ -1697,6 +1749,7 @@ function initLoveGate(){
 
     loveNoBtn.addEventListener('click', onNoClick);
     loveNoBtn.addEventListener('touchend', (e) => {
+      musicManager.start();
       if (!loveGateActive || !loveGate || loveGate.style.display === 'none') return;
       e.preventDefault();
       e.stopPropagation();
