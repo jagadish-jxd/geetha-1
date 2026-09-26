@@ -208,6 +208,13 @@ class BirthdayMusicManager {
         btn.setAttribute('title', 'Volume ON (Click to mute)');
       }
     });
+
+    try {
+      const hint = document.getElementById('loveLoaderMusicHint');
+      if (hint && audio && !audio.paused && !audio.muted && audio.volume > 0) {
+        hint.classList.add('is-hidden');
+      }
+    } catch (_) {}
   }
 
   initVolumeButton() {

@@ -76,6 +76,7 @@ const loveLoader       = $('loveLoader');
 const loveLoaderEmblem = $('loveLoaderEmblem');
 const loveLoaderBar    = $('loveLoaderBar');
 const loveLoaderStatus = $('loveLoaderStatus');
+const loveLoaderMusicHint = $('loveLoaderMusicHint');
 
 try { sessionStorage.removeItem('allow_memories'); } catch (_) {}
 musicManager.setupFirstInteractionListener();
@@ -1638,8 +1639,46 @@ function handleLoveYes(){
 function runLoveGateIntro(){
   if (!loveLoader) return;
 
-  loveLoader.addEventListener('pointerdown', () => musicManager.start(), { passive: true });
-  loveLoader.addEventListener('click', () => musicManager.start(), { passive: true });
+  const hideMusicHint = () => {
+    if (loveLoaderMusicHint) {
+      loveLoaderMusicHint.classList.add('is-hidden');
+    }
+  };
+
+  if (loveLoaderMusicHint) {
+    const handleHintTap = (e) => {
+      e.stopPropagation();
+      const audio = musicManager.getAudio();
+      audio.muted = false;
+      musicManager.setSessionMuted(false);
+      musicManager.start(false);
+      musicManager.updateButtonUI();
+      hideMusicHint();
+    };
+    loveLoaderMusicHint.addEventListener('click', handleHintTap);
+    loveLoaderMusicHint.addEventListener('touchend', handleHintTap);
+  }
+
+  // If audio is already playing audibly, dismiss hint immediately
+  try {
+    const audio = musicManager.getAudio();
+    if (audio && !audio.paused && !audio.muted) {
+      hideMusicHint();
+    } else if (audio) {
+      audio.addEventListener('play', () => {
+        if (!audio.muted) hideMusicHint();
+      }, { once: true });
+    }
+  } catch (_) {}
+
+  loveLoader.addEventListener('pointerdown', () => {
+    musicManager.start();
+    hideMusicHint();
+  }, { passive: true });
+  loveLoader.addEventListener('click', () => {
+    musicManager.start();
+    hideMusicHint();
+  }, { passive: true });
 
   if (reduceMotion){
     loveLoader.style.display = 'none';
