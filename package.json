@@ -6,7 +6,6 @@
   "description": "A birthday film in four acts: draw a Cupid bow, strike a heart, and watch it bloom into a tree of hearts. Vanilla JS + GSAP, one canvas, no framework.",
   "scripts": {
     "dev": "vite",
-    "dev:chrome": "start chrome --autoplay-policy=no-user-gesture-required http://localhost:5173",
     "build": "vite build",
     "preview": "vite preview"
   },

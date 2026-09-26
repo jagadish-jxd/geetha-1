@@ -1,14 +1,17 @@
 /* ============================================================
    BACKGROUND MUSIC SYSTEM
    Single continuous background soundtrack across the entire website
-   - ONE background audio instance for the entire website
-   - Starts automatically when opened if browser allows
-   - Immediately attempts playback from 0:00 after refreshing
-   - Continuous through all pages: First Page → Second Page → Tree → Message → Memory
-   - Never restarts when moving between pages
-   - Loops continuously (audio.loop = true)
-   - Volume button only mutes/unmutes (DOES NOT pause or restart)
-   - Respects session mute choice across navigation
+   - Exactly ONE global background audio instance
+   - Uses: /birthday-song.mp3 (located directly inside public/)
+   - Immediately attempts autoplay on load and after every refresh
+   - audio.autoplay = true; audio.loop = true; audio.volume = 0.35; audio.play();
+   - Silently catches Chrome autoplay policy rejection without error
+   - Volume button:
+       🔊 → 🔇 : mute only (never pause, song keeps playing silently)
+       🔇 → 🔊 : unmute, and if blocked by Chrome, call audio.play()
+       Never restart when unmuting
+       Never create another audio element
+   - Continuous through: First Page → Second Page → Tree → Message → Memory
    ============================================================ */
 
 class BirthdayMusicManager {
@@ -16,12 +19,12 @@ class BirthdayMusicManager {
     this.audio = null;
     this.hasStarted = false;
     this.defaultVolume = 0.35;
-    this.primarySrc = '/music/birthday-song.mp3';
-    this.fallbackSrc = './music/birthday-song.mp3';
+    this.primarySrc = '/birthday-song.mp3';
+    this.fallbackSrc = './birthday-song.mp3';
     this._listenersAttached = false;
     this._interactionHandler = this.handleInteraction.bind(this);
 
-    // On fresh refresh, clear session mute so new session attempts autoplay normally
+    // On full page refresh, clear reload mute so session starts fresh
     this.checkIfReload();
   }
 
@@ -120,6 +123,7 @@ class BirthdayMusicManager {
       } catch (_) {}
     }
 
+    audio.autoplay = true;
     audio.loop = true;
     audio.volume = this.defaultVolume;
     audio.muted = this.isSessionMuted();
@@ -134,7 +138,7 @@ class BirthdayMusicManager {
             this.updateButtonUI();
           })
           .catch(() => {
-            // Autoplay rejected by browser policy until user gesture
+            // Silently catch Chrome autoplay policy rejection without error
             // Keep music state ready so first normal user interaction starts the song
             this.setupFirstInteractionListener();
             this.updateButtonUI();
@@ -147,44 +151,37 @@ class BirthdayMusicManager {
   }
 
   /**
-   * VOLUME ON/OFF TOGGLE
+   * VOLUME ON/OFF BUTTON
    * This is NOT a Play/Pause button.
    * Only controls whether the music can be heard (mute/unmute).
-   * 🔊 → 🔇 : mute audio, song MUST continue playing in background, DO NOT pause.
-   * 🔇 → 🔊 : unmute audio, song continues from current position, DO NOT restart.
+   * 🔊 → 🔇 : mute only. The song MUST continue playing in background. Do NOT pause.
+   * 🔇 → 🔊 : unmute. If playback was blocked by Chrome, call audio.play(). Never restart song.
    */
   toggleVolume() {
     const audio = this.getAudio();
 
-    // If audio is currently paused because Chrome deferred initial autoplay
-    if (audio.paused) {
+    if (audio.muted) {
+      // 🔇 → 🔊 : Unmute and restore volume
       audio.muted = false;
-      this.setSessionMuted(false);
       audio.volume = this.defaultVolume;
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
+      this.setSessionMuted(false);
+
+      // If audio was blocked by Chrome (paused), start playback from this user interaction without restarting position
+      if (audio.paused) {
+        if (isNaN(audio.currentTime) || audio.currentTime >= audio.duration) {
+          try { audio.currentTime = 0; } catch (_) {}
+        }
+        const p = audio.play();
+        if (p !== undefined) {
+          p.then(() => {
             this.hasStarted = true;
             this.removeInteractionListeners();
             this.updateButtonUI();
-          })
-          .catch(() => {
-            this.updateButtonUI();
-          });
+          }).catch(() => {});
+        }
       }
-      this.updateButtonUI();
-      return;
-    }
-
-    // Toggle mute state without pausing or changing playback position
-    if (audio.muted) {
-      // 🔇 → 🔊 : Unmute, keep playing from exact current position
-      audio.muted = false;
-      audio.volume = this.defaultVolume;
-      this.setSessionMuted(false);
     } else {
-      // 🔊 → 🔇 : Mute, continues playing silently in background
+      // 🔊 → 🔇 : Mute only. The song continues playing in background. NEVER pause.
       audio.muted = true;
       this.setSessionMuted(true);
     }
@@ -312,6 +309,11 @@ function setupMusicLifecycle() {
   musicManager.initVolumeButton();
   musicManager.start(true);
 }
+
+// Immediately attempt autoplay without waiting
+try {
+  musicManager.start(true);
+} catch (_) {}
 
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
